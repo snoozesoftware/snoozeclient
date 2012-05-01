@@ -1,0 +1,4 @@
+debian/input/snoozeclient.jar /usr/share/snoozeclient
+debian/input/log4j.xml /usr/share/snoozeclient/configs
+debian/input/snooze_client.cfg /usr/share/snoozeclient/configs
+debian/input/snoozeclient /usr/bin

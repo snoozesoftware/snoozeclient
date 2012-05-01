@@ -1,0 +1,12 @@
+Source: snoozeclient
+Section: misc
+Priority: optional
+Maintainer: Eugen Feller <eugen.feller@inria.fr> 
+Standards-Version: 3.8.0
+Build-Depends: debhelper (>= 5), sun-java6-jre
+Homepage: http://snooze.inria.fr
+
+Package: snoozeclient
+Architecture: all
+Depends: sun-java6-jre
+Description: A command-line interface (CLI) for the Snooze cloud management framework.
