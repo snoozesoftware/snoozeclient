@@ -15,11 +15,15 @@
 	</license>
   </licenses>
 
+  <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
   <distributionManagement>
         <repository>
                 <id>snooze-release-repository</id>
                 <name>Snooze Release Repository</name>
-                <url>dav:https://wevdav.irisa.fr/snooze.inria.fr/htdocs/maven/releases</url>
+                <url>dav:https://webdav.irisa.fr/snooze.inria.fr/htdocs/maven/releases</url>
         </repository>
         <snapshotRepository>
                 <id>snooze-snapshot-repository</id>
