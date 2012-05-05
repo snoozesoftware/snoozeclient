@@ -1,4 +1,10 @@
-snoozeclient (1.0-0) unstable; urgency=low
+snoozeclient (1.0.1-0) unstable; urgency=low
+
+   * TODO 
+
+ -- Eugen Feller <eugen.feller@inria.fr>  Mon,  30 Apr 2012 17:01:49 -0700
+ 
+snoozeclient (1.0.0-0) unstable; urgency=low
 
    * First release 
 
