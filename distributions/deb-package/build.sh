@@ -28,7 +28,7 @@ cp ../../configs/log4j.xml $SNOOZE_PACKAGE_NAME/debian/input/
 cp ../../target/$SNOOZE_JAR_NAME $SNOOZE_PACKAGE_NAME/debian/input/snoozeclient.jar
 
 # Generate package (with fakeroot)
-export LD_LIBRARY_PATH=/usr/lib/libfakeroot
+export LD_LIBRARY_PATH=/usr/lib/libfakeroot:/usr/lib/x86_64-linux-gnu/libfakeroot/
 export LD_PRELOAD=libfakeroot-sysv.so
 
 cd $SNOOZE_PACKAGE_NAME
