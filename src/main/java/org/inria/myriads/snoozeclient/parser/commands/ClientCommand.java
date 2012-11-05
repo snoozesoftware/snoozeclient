@@ -51,7 +51,9 @@ public enum ClientCommand
     /** Visualize. */
     VISUALIZE("visualize"),
     /** Dump. */
-    DUMP("dump");
+    DUMP("dump"),
+    /** Reboot. */
+    REBOOT("reboot");
     
     /** Command name. */
     private String commandName_;

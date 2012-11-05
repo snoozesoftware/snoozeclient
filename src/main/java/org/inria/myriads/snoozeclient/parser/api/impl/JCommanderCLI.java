@@ -35,6 +35,7 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.DumpCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.InfoCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.MainCommand;
+import org.inria.myriads.snoozeclient.parser.api.impl.commands.RebootCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.RemoveCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ResumeCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ShutdownCommand;
@@ -95,6 +96,7 @@ public final class JCommanderCLI
         commands_.put(ClientCommand.LIST, new ListCommand());
         commands_.put(ClientCommand.VISUALIZE, new VisualizeCommand());
         commands_.put(ClientCommand.DUMP, new DumpCommand());
+        commands_.put(ClientCommand.REBOOT, new RebootCommand());
         
         for (ClientCommand command : ClientCommand.values()) 
         {
@@ -218,6 +220,10 @@ public final class JCommanderCLI
                 
             case SHUTDOWN :
                 clusterCommand(getShutdownCommand(), output);
+                break;
+            
+            case REBOOT :
+                clusterCommand(getRebootCommand(), output);
                 break;
                 
             case DESTROY :
@@ -369,6 +375,16 @@ public final class JCommanderCLI
     public ShutdownCommand getShutdownCommand()
     {
         return (ShutdownCommand) commands_.get(ClientCommand.SHUTDOWN);
+    }
+    
+    /**
+     * Returns the reboot command.
+     * 
+     * @return   The reboot command
+     */
+    public RebootCommand getRebootCommand()
+    {
+        return (RebootCommand) commands_.get(ClientCommand.REBOOT);
     }
     
     /**

@@ -170,6 +170,18 @@ public final class VirtualClusterControl
         Guard.check(location);
         return groupManagerCommunicator_.shutdownVirtualMachine(location);
     }
+    
+    /** 
+     * Reboot a virtual machine.
+     * 
+     * @param location      The virtual machine location
+     * @return              true if everything ok, false otherwise
+     */
+    public boolean reboot(VirtualMachineLocation location)
+    {
+        Guard.check(location);
+        return groupManagerCommunicator_.rebootVirtualMachine(location);
+    }
 
     /** 
      * Destroy a virtual machine.
