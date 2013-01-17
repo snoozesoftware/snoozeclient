@@ -68,11 +68,11 @@ public class GeographicalLayout extends TreeLayout<SnoozeVertex, Integer> implem
         log_.error("initialize Root");
         roots_ = new HashMap<String, Point2D>();
         nodesPerLevel_ = new HashMap<String, int[]>();
-        roots_.put("rennes", new Point2D.Double(100,100));
+        roots_.put("rennes", new Point2D.Double(50,50));
         nodesPerLevel_.put("rennes", new int[3]);
-        roots_.put("nancy", new Point2D.Double(600,100));
+        roots_.put("nancy", new Point2D.Double(500,50));
         nodesPerLevel_.put("nancy", new int[3]);
-        roots_.put("sophia", new Point2D.Double(700,400));
+        roots_.put("sophia", new Point2D.Double(600,400));
         nodesPerLevel_.put("sophia", new int[3]);
         roots_.put("mafalda", new Point2D.Double(500,50));
         nodesPerLevel_.put("mafalda", new int[3]);
@@ -91,25 +91,18 @@ public class GeographicalLayout extends TreeLayout<SnoozeVertex, Integer> implem
         if(y < 0) size.height -= y;
         if(y > size.height-distY)
                 size.height = y + distY;
-        String str[]=vertex.getHostName().split("/");
+        String hostName = vertex.getHostName() ;
         String site = "";
         try
         {
-             site = getSite(str[1]);;    
+             site = getSite(hostName);    
         }
         catch(Exception e)
         {
             site = "mafalda";
         }
         
-        Point2D root ;
-        root = roots_.get(site);
-        double xRoot = root.getX();
-        double yRoot = root.getY();
-        log_.error("root = "+xRoot+","+yRoot);
-        int n = nodesPerLevel_.get(site)[0];
-        int y1 = n/4;
-        int x1 = n%4;
+
         
         //hmm this is needed
         if (!initialized)
@@ -117,22 +110,42 @@ public class GeographicalLayout extends TreeLayout<SnoozeVertex, Integer> implem
             initializeRoots();
         
         }
+        Point2D root ;
+        root = roots_.get(site);
+        double xRoot = root.getX();
+        double yRoot = root.getY();
         
+        log_.debug("root = "+xRoot+","+yRoot);
+        
+        
+        int n = 0;
+        int y1 = 0;
+        int x1 = 0;
+                
         switch(vertex.getNodeType()){
             case GL :
                 locations.get(vertex).setLocation(xRoot,yRoot);
                 break;
             case GM : 
-                locations.get(vertex).setLocation(new Point2D.Double(xRoot+x1*60,yRoot+150+60*y1));
-                nodesPerLevel_.get(site)[1]++;
+                n = nodesPerLevel_.get(site)[0];
+                y1 = n/4;
+                x1 = n%4;
+                locations.get(vertex).setLocation(new Point2D.Double(xRoot+x1*60,yRoot+100+60*y1));
+                nodesPerLevel_.get(site)[0]++;
                 break;
             case LC :
             case LC_PASSIVE:
-                locations.get(vertex).setLocation(new Point2D.Double(xRoot+x1*60,yRoot+300+60*y1));
+                n = nodesPerLevel_.get(site)[1];
+                y1 = n/4;
+                x1 = n%4;
+                locations.get(vertex).setLocation(new Point2D.Double(xRoot+x1*60,yRoot+200+60*y1));
                 nodesPerLevel_.get(site)[1]++;
                 break;
             case VM :
-                locations.get(vertex).setLocation(new Point2D.Double(xRoot+x1*60,yRoot+450+60*y1));
+                n = nodesPerLevel_.get(site)[2];
+                y1 = n/4;
+                x1 = n%4;
+                locations.get(vertex).setLocation(new Point2D.Double(xRoot+x1*60,yRoot+300+60*y1));
                 nodesPerLevel_.get(site)[2]++;
                 break;
         }

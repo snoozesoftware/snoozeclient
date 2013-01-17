@@ -7,18 +7,18 @@ import java.awt.geom.Ellipse2D;
 
 import org.apache.commons.collections15.Transformer;
 import org.inria.myriads.snoozeclient.systemtree.enums.NodeType;
+import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * 
  * Vertex transformer.
- * @deprecated
  * 
  * @author msimonin
  *
  */
-public class GeographicalVertexShapeTransformer implements Transformer<String, Shape> {
+public class GeographicalVertexShapeTransformer implements Transformer<SnoozeVertex, Shape> {
 
     
     
@@ -28,9 +28,9 @@ public class GeographicalVertexShapeTransformer implements Transformer<String, S
     /** Shapes. */
         private Shape[] shapes_ = 
         {
-            new Rectangle(-6, -4, 12, 6), 
-            new Ellipse2D.Double(-5, -2, 10, 4),
-            new Arc2D.Double(-6, -3, 12, 6, 6, 6, Arc2D.PIE) 
+            new Rectangle(-24, -16, 48, 24), 
+            new Ellipse2D.Double(-20, -8, 40, 16),
+            new Arc2D.Double(-24, -12, 48, 24, 24, 24, Arc2D.PIE) 
         };
 
         /**
@@ -39,10 +39,10 @@ public class GeographicalVertexShapeTransformer implements Transformer<String, S
          * @param index     The index
          * @return          The color
          */
-        public Shape transform(String index)
+        public Shape transform(SnoozeVertex vertex)
         {
             Shape shape;
-            NodeType nodeType = NodeType.valueOf(index.substring(0, 2));
+            NodeType nodeType = vertex.getNodeType();
             switch (nodeType)
             {
                 case GL :

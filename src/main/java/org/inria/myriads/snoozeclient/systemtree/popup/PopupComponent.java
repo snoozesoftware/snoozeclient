@@ -10,6 +10,7 @@ import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,7 +161,7 @@ public abstract class PopupComponent extends JFrame
      * @param hierarchy         The hierarchy.
      * @return                  true if everything ok.
      */
-    abstract boolean update(GroupLeaderRepositoryInformation hierarchy);
+    public abstract boolean update(GroupLeaderRepositoryInformation hierarchy);
     
     /**
      * 

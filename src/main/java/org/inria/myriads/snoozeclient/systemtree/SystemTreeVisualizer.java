@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozeclient.systemtree.popup;
+package org.inria.myriads.snoozeclient.systemtree;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -66,6 +66,10 @@ import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.functors.ConstantTransformer;
 import org.inria.myriads.snoozeclient.exception.BootstrapUtilityException;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
+import org.inria.myriads.snoozeclient.systemtree.layout.GeographicalLayout;
+import org.inria.myriads.snoozeclient.systemtree.popup.PopupComponent;
+import org.inria.myriads.snoozeclient.systemtree.popup.PopupGraphMousePlugin;
+import org.inria.myriads.snoozeclient.systemtree.transformers.GeographicalVertexShapeTransformer;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexColorTransformer;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexShapeTransformer;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexToolTipTransformer;
@@ -458,7 +462,7 @@ public final class SystemTreeVisualizer extends JFrame
     
         if (layout_)
         {
-            log_.error("Radial");
+            log_.error("Geographical");
             radialLayout = new RadialTreeLayout<SnoozeVertex, Integer>(graph, 50, 100);
         }
         else

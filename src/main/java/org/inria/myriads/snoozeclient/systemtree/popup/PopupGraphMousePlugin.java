@@ -13,6 +13,7 @@ import edu.uci.ics.jung.algorithms.layout.GraphElementAccessor;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.AbstractPopupGraphMousePlugin;
 
+import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;

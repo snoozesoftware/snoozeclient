@@ -9,6 +9,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
@@ -210,7 +211,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
      * @param hierarchy         The hierarchy.
      * @return                  true if everything ok.
      */
-    boolean update(GroupLeaderRepositoryInformation hierarchy) 
+    public boolean update(GroupLeaderRepositoryInformation hierarchy) 
     {
         updateHostDescription(hierarchy);
         SwingUtilities.invokeLater(new Runnable() 
