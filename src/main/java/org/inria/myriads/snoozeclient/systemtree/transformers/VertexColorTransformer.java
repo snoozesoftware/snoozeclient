@@ -24,6 +24,7 @@ import java.awt.Paint;
 
 import org.apache.commons.collections15.Transformer;
 import org.inria.myriads.snoozeclient.systemtree.enums.NodeType;
+import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,24 +34,24 @@ import org.slf4j.LoggerFactory;
  * @author Eugen Feller
  */
 public final class VertexColorTransformer 
-    implements Transformer<String, Paint>
+    implements Transformer<SnoozeVertex, Paint>
 {
     /** Logger. */
     private static final Logger log_ = LoggerFactory.getLogger(VertexColorTransformer.class);
     
     /** Colors. */
-    private final Color[] colors_ = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.BLACK}; 
+    private final Color[] colors_ = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.BLACK, Color.LIGHT_GRAY}; 
 
     /**
      * Transforms.
-     * 
-     * @param index     The index
+     * @param vertex           The vertex to transform.
      * @return          The color
      */
-    public Paint transform(String index) 
+    public Paint transform(SnoozeVertex vertex)
     {
         Color color;
-        NodeType nodeType = NodeType.valueOf(index.substring(0, 2));
+        //NodeType nodeType = NodeType.valueOf(index.substring(0, 2));
+        NodeType nodeType = vertex.getNodeType();
         switch (nodeType)
         {
             case GL :
@@ -64,7 +65,9 @@ public final class VertexColorTransformer
             case LC :
                 color = colors_[2];
                 break;
-                
+            case LC_PASSIVE :
+                color = colors_[5];
+                break;
             case VM :
                 color = colors_[3];
                 break;

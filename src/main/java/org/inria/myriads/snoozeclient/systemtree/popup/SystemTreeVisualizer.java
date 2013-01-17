@@ -17,46 +17,63 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozeclient.systemtree;
+package org.inria.myriads.snoozeclient.systemtree.popup;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
+import edu.uci.ics.jung.algorithms.layout.Layout;
 import edu.uci.ics.jung.algorithms.layout.RadialTreeLayout;
+import edu.uci.ics.jung.algorithms.layout.TreeLayout;
 import edu.uci.ics.jung.graph.Forest;
 import edu.uci.ics.jung.visualization.GraphZoomScrollPane;
 import edu.uci.ics.jung.visualization.VisualizationViewer;
 import edu.uci.ics.jung.visualization.control.CrossoverScalingControl;
-import edu.uci.ics.jung.visualization.control.DefaultModalGraphMouse;
+import edu.uci.ics.jung.visualization.control.PluggableGraphMouse;
 import edu.uci.ics.jung.visualization.control.ScalingControl;
+import edu.uci.ics.jung.visualization.control.TranslatingGraphMousePlugin;
 import edu.uci.ics.jung.visualization.decorators.EdgeShape;
 import edu.uci.ics.jung.visualization.decorators.ToStringLabeller;
 import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
 import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.functors.ConstantTransformer;
+import org.inria.myriads.snoozeclient.exception.BootstrapUtilityException;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexColorTransformer;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexShapeTransformer;
+import org.inria.myriads.snoozeclient.systemtree.transformers.VertexToolTipTransformer;
+import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.TimeUtils;
 import org.slf4j.Logger;
@@ -79,7 +96,8 @@ public final class SystemTreeVisualizer extends JFrame
     private static final long serialVersionUID = -1877608073494399896L;
         
     /** Visualization viewer. */
-    private VisualizationViewer<String, Integer> visualizationViewer_;
+    //private VisualizationViewer<String, Integer> visualizationViewer_;
+    private VisualizationViewer<SnoozeVertex, Integer> visualizationViewer_;
     
     /** Bootstrap nodes. */
     private List<NetworkAddress> bootstrapNodes_;
@@ -98,6 +116,15 @@ public final class SystemTreeVisualizer extends JFrame
 
     /** System graph generator. */
     private SystemGraphGenerator graphGenerator_;
+
+    /** Layout style. */
+    private boolean layout_;
+    
+    /** Hierarchy. */
+    private GroupLeaderRepositoryInformation hierarchy_;
+
+    /** Popup opened. */
+    private Map<String, PopupComponent> popupComponents_ = new HashMap<String, PopupComponent>(); 
     
     /**
      * Constructor.
@@ -115,7 +142,31 @@ public final class SystemTreeVisualizer extends JFrame
         graphGenerator_ = graphGenerator;
         initializeGUI();
     }
-
+    
+    /**
+     * 
+     * Gets the complete hierarchy.
+     * 
+     * @param groupLeader       The group leader
+     * @return                  The complete hierarchy ( decorated GroupLeaderRepository )
+     */
+    private GroupLeaderRepositoryInformation getCompleteHierarchy(GroupManagerDescription groupLeader)
+    {
+        log_.debug("Starting the hierarchy building");
+        GroupLeaderRepositoryInformation hierarchy;
+        try 
+        {
+            hierarchy = BootstrapUtilis.getCompleteHierarchy(bootstrapNodes_);
+        } 
+        catch (BootstrapUtilityException e) 
+        {
+            e.printStackTrace();
+            return null;
+        }
+        return hierarchy;
+    }
+    
+    
     /**
      * Starts the polling.
      */
@@ -133,11 +184,15 @@ public final class SystemTreeVisualizer extends JFrame
                 Thread.sleep(pollingInterval);
                 
                 GroupManagerDescription groupLeader = BootstrapUtilis.getGroupLeaderDescription(bootstrapNodes_);
-                Forest<String, Integer> graph = graphGenerator_.generateGraph(groupLeader);
+                
+                log_.debug("Updating the hierarchy");
+                hierarchy_ = getCompleteHierarchy(groupLeader);
+                Forest<SnoozeVertex, Integer> graph = graphGenerator_.generateGraph(hierarchy_);
                 message = "System graph generated!";
 
                 visualizationViewer_ = reinitializeVisualizationViewer(graph);  
                 updateGUI();
+                updateAllPopupComponents();
             }
             catch (InterruptedException exception) 
             {
@@ -206,7 +261,7 @@ public final class SystemTreeVisualizer extends JFrame
     protected void initializeGUI() 
     {
         setResizable(false);
-        setPreferredSize(new Dimension(1050, 800));
+        setPreferredSize(new Dimension(1100, 800));
         setBackground(Color.WHITE);
         setDefaultLookAndFeelDecorated(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -252,6 +307,17 @@ public final class SystemTreeVisualizer extends JFrame
         });
         controlPanel.add(stopDrawing);
         
+        
+        JButton changeLayout = new JButton("Layout");
+        changeLayout.addActionListener(new ActionListener() 
+        {
+            public void actionPerformed(ActionEvent arg0)  
+            {
+                layout_ = !layout_;
+            }
+        });
+        controlPanel.add(changeLayout);
+        
         JPanel zoomPanel = new JPanel();
         managementPanel.add(zoomPanel);
         zoomPanel.setLayout(new GridLayout(0, 2, 0, 0));
@@ -278,6 +344,8 @@ public final class SystemTreeVisualizer extends JFrame
         
         zoomOut.addActionListener(new ActionListener() 
         {
+
+
             public void actionPerformed(ActionEvent arg0) 
             {
                 if (visualizationViewer_ != null)
@@ -291,6 +359,37 @@ public final class SystemTreeVisualizer extends JFrame
         });
         zoomPanel.setBorder(BorderFactory.createTitledBorder("Zoom"));
         
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new GridBagLayout());
+        
+        JPanel imagePanel = new JPanel();
+        imagePanel.setLayout(new GridLayout(4, 0, 0, 0));
+        imagePanel.setPreferredSize(new Dimension(150, 500));
+        visualizationPanel_.setPreferredSize(new Dimension(900, 600));
+        BufferedImage myPicture;
+        try 
+        {
+            myPicture = ImageIO.read(new File("/home/msimonin/git/snoozeclient/src/main/resources/inria.png"));
+            JLabel picLabel0 = new JLabel(new ImageIcon(myPicture));
+            imagePanel.add(picLabel0);
+            myPicture = ImageIO.read(new File("/home/msimonin/git/snoozeclient/src/main/resources/cnrs.png"));
+            JLabel picLabel1 = new JLabel(new ImageIcon(myPicture));
+            imagePanel.add(picLabel1);
+            myPicture = ImageIO.read(new File("/home/msimonin/git/snoozeclient/src/main/resources/Logo.png"));
+            JLabel picLabel2 = new JLabel(new ImageIcon(myPicture));
+            imagePanel.add(picLabel2);
+            myPicture = ImageIO.read(new File("/home/msimonin/git/snoozeclient/src/main/resources/snooze.png"));
+            JLabel picLabel3 = new JLabel(new ImageIcon(myPicture));
+            imagePanel.add(picLabel3);
+        } 
+        catch (IOException e) 
+        {
+            e.printStackTrace();
+        }
+        
+        topPanel.add(visualizationPanel_);
+        topPanel.add(imagePanel);
+        
         GroupLayout groupLayout = new GroupLayout(getContentPane());
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
@@ -299,17 +398,21 @@ public final class SystemTreeVisualizer extends JFrame
                     .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                       .addComponent(managementPanel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 970, 
                                     Short.MAX_VALUE)
-                      .addComponent(visualizationPanel_, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 970, 
+                      .addComponent(topPanel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 970, 
                                     Short.MAX_VALUE))
+                      //.addComponent(visualizationPanel_, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 970, 
+                      //              Short.MAX_VALUE))
                     .addContainerGap())
         );
         groupLayout.setVerticalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(visualizationPanel_, GroupLayout.PREFERRED_SIZE, 650, GroupLayout.PREFERRED_SIZE)
+                    //.addComponent(visualizationPanel_, GroupLayout.PREFERRED_SIZE, 650, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(topPanel, GroupLayout.PREFERRED_SIZE, 650, GroupLayout.PREFERRED_SIZE)
                     .addGap(18)
                     .addComponent(managementPanel, GroupLayout.DEFAULT_SIZE, 80, Short.MAX_VALUE)
+
                     .addContainerGap())
         );
         
@@ -346,28 +449,99 @@ public final class SystemTreeVisualizer extends JFrame
      * @return          The visualization viewer
      */         
     @SuppressWarnings("unchecked")
-    private VisualizationViewer<String, Integer> reinitializeVisualizationViewer(Forest<String, Integer> graph)
+    private VisualizationViewer<SnoozeVertex, Integer> 
+            reinitializeVisualizationViewer(Forest<SnoozeVertex, Integer> graph)
     {
         log_.debug("Creating new visualization viewer");       
-        RadialTreeLayout radialLayout = new RadialTreeLayout<String, Integer>(graph);
-        radialLayout.setSize(new Dimension(700, 400));
+
+        Layout radialLayout;
+    
+        if (layout_)
+        {
+            log_.error("Radial");
+            radialLayout = new RadialTreeLayout<SnoozeVertex, Integer>(graph, 50, 100);
+        }
+        else
+        {
+            log_.error("Tree");
+            radialLayout = new TreeLayout<SnoozeVertex, Integer>(graph, 50, 100);
+        }
+    
+        VisualizationViewer visualizationViewer = new VisualizationViewer<SnoozeVertex, Integer>(radialLayout, 
+                                                                                           new Dimension(1000, 1000));  
         
-        VisualizationViewer visualizationViewer = new VisualizationViewer<String, Integer>(radialLayout, 
-                                                                                           new Dimension(600, 600));  
         visualizationViewer.setBackground(Color.white);
         visualizationViewer.getRenderContext().setEdgeShapeTransformer(new EdgeShape.Line());
-        visualizationViewer.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
         visualizationViewer.getRenderContext().setArrowFillPaintTransformer(new ConstantTransformer(Color.lightGray)); 
         visualizationViewer.getRenderer().getVertexLabelRenderer().setPosition(Position.CNTR);
         
-        DefaultModalGraphMouse graphMouse = new DefaultModalGraphMouse();
+        if (layout_)
+        {
+            //visualizationViewer.getRenderContext().setVertexLabelTransformer(new VertexLabelTransformer());
+            visualizationViewer.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
+          //  Transformer vertexShapeTransformer = new GeographicalVertexShapeTransformer();
+            Transformer vertexShapeTransformer = new VertexShapeTransformer();
+            visualizationViewer.getRenderContext().setVertexShapeTransformer(vertexShapeTransformer);
+        }
+        else
+        {
+            visualizationViewer.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
+            Transformer vertexShapeTransformer = new VertexShapeTransformer();
+            visualizationViewer.getRenderContext().setVertexShapeTransformer(vertexShapeTransformer);
+        }
+        
+        PluggableGraphMouse graphMouse = new PluggableGraphMouse();
+        graphMouse.add(new TranslatingGraphMousePlugin(MouseEvent.BUTTON1_MASK));
+        graphMouse.add(new PopupGraphMousePlugin(hierarchy_, this));
         visualizationViewer.setGraphMouse(graphMouse);
+        
+        visualizationViewer.setVertexToolTipTransformer(new VertexToolTipTransformer());
         
         Transformer vertexColorTransformer = new VertexColorTransformer();       
         visualizationViewer.getRenderContext().setVertexFillPaintTransformer(vertexColorTransformer);
 
-        Transformer vertexShapeTransformer = new VertexShapeTransformer();
-        visualizationViewer.getRenderContext().setVertexShapeTransformer(vertexShapeTransformer);  
         return visualizationViewer;
     }
+
+
+    /**
+     * 
+     * Register a new popup.
+     * 
+     * @param popupComponent        The popup component
+     */
+    public void register(PopupComponent popupComponent)
+    {
+        log_.debug("register new popup compent with id : " + popupComponent.getPopupComponentId());
+        popupComponents_ .put(popupComponent.getPopupComponentId(), popupComponent);
+    }
+    
+    
+    /**
+     * 
+     * Removes an active popup.
+     * 
+     * @param popupComponentId      The popup id.
+     */
+    public void remove(String popupComponentId)
+    {
+        log_.debug("Unregister the popup component with id " + popupComponentId);
+        popupComponents_.remove(popupComponentId);
+    }
+    
+    
+    /**
+     * 
+     * Upadate all popups.
+     * 
+     */
+    public void updateAllPopupComponents()
+    {
+        log_.debug("update all popup component");
+        for (Map.Entry<String, PopupComponent> entry : popupComponents_.entrySet()) 
+        {
+            entry.getValue().update(hierarchy_);
+        }
+    }
+    
 }

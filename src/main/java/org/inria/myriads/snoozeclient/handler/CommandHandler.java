@@ -39,9 +39,8 @@ import org.inria.myriads.snoozeclient.parser.output.ParserOutput;
 import org.inria.myriads.snoozeclient.resourcecontrol.VirtualClusterControl;
 import org.inria.myriads.snoozeclient.statistics.results.SubmissionResults;
 import org.inria.myriads.snoozeclient.statistics.util.SubmissionResultsUtils;
-import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
-import org.inria.myriads.snoozeclient.systemtree.util.DumpUtil;
+import org.inria.myriads.snoozeclient.systemtree.popup.SystemTreeVisualizer;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -217,7 +216,7 @@ public final class CommandHandler
         throws Exception
     {
         GroupManagerDescription groupLeader = BootstrapUtilis.getGroupLeaderDescription(bootstrapNodes);
-        DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
+      //  DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
     }
     
     /**

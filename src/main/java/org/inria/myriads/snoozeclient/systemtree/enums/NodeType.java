@@ -32,6 +32,8 @@ public enum NodeType
     GM,
     /** Local controller. */
     LC,
+    /** Local controller. */
+    LC_PASSIVE,
     /** Virtual machine. */
     VM
 }

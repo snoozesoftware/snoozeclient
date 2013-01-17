@@ -26,6 +26,7 @@ import java.awt.geom.Ellipse2D;
 
 import org.apache.commons.collections15.Transformer;
 import org.inria.myriads.snoozeclient.systemtree.enums.NodeType;
+import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,14 +35,14 @@ import org.slf4j.LoggerFactory;
  * 
  * @author Eugen Feller
  */
-public final class VertexShapeTransformer 
-    implements Transformer<String, Shape>
+public class VertexShapeTransformer 
+    implements Transformer<SnoozeVertex, Shape>
 {
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(VertexShapeTransformer.class);
     
     /** Shapes. */
-    private final Shape[] shapes_ = 
+    private Shape[] shapes_ =
     {
         new Rectangle(-30, -20, 50, 30), 
         new Ellipse2D.Double(-25, -10, 50, 20),
@@ -50,14 +51,14 @@ public final class VertexShapeTransformer
     
     /**
      * Transforms.
-     * 
-     * @param index     The index
+     *
+     * @param vertex    The vertex to transform
      * @return          The color
      */
-    public Shape transform(String index)
+    public Shape transform(SnoozeVertex vertex)
     {
         Shape shape;
-        NodeType nodeType = NodeType.valueOf(index.substring(0, 2));
+        NodeType nodeType = vertex.getNodeType();
         switch (nodeType)
         {
             case GL :
@@ -71,7 +72,9 @@ public final class VertexShapeTransformer
             case LC :
                 shape = shapes_[1];
                 break;
-                
+            case LC_PASSIVE :
+                shape = shapes_[1];
+                break;
             case VM :
                 shape = shapes_[1];
                 break;
