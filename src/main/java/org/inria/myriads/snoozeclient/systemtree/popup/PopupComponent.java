@@ -33,14 +33,16 @@ public abstract class PopupComponent extends JFrame
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerPopupComponent.class);
 
+    /** Main panel. */
+    private JPanel hostDescriptionPanel_;
+    
+    
     /** The Component id. */
-    protected String popupComponentId_;
+    private String popupComponentId_;
     
     /** The system tree visualizer. */
     private SystemTreeVisualizer systemTreeVisualizer_;
     
-    /** Main panel. */
-    protected JPanel hostDescriptionPanel_;
     
     /**
      * 
@@ -173,5 +175,27 @@ public abstract class PopupComponent extends JFrame
 
 
 
+    /**
+     * 
+     * Gets the host panel.
+     * 
+     * @return the hostDescriptionPanel_
+     */
+    public JPanel getHostDescriptionPanel() 
+    {
+        return hostDescriptionPanel_;
+    }
 
+
+
+    /**
+     * 
+     * Sets the host panel.
+     * 
+     * @param hostDescriptionPanel the hostDescriptionPanel to set
+     */
+    public void setHostDescriptionPanel(JPanel hostDescriptionPanel)
+    {
+        hostDescriptionPanel_ = hostDescriptionPanel;
+    }
 }

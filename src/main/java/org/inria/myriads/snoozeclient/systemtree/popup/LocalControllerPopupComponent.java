@@ -3,7 +3,6 @@ package org.inria.myriads.snoozeclient.systemtree.popup;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -61,16 +60,11 @@ public class LocalControllerPopupComponent  extends PopupComponent
     {
         super(systemTreeVisualizer);
         log_.debug("Creation of the new local controller component");
-      
         localController_ = localController;
-        
         initializeHostPanel();
         initializeLocalControllerPanel();
-        
         display();    
-        popupComponentId_ = UUID.randomUUID().toString();
-        
-        log_.debug("local controller component created with id " + popupComponentId_);
+        log_.debug("local controller component created with id " + getPopupComponentId());
     }
 
     /**
@@ -139,7 +133,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
             JFreeChart chart = ChartFactory.createXYLineChart("CPU",
                     "x", "y", collection, PlotOrientation.VERTICAL, true, true,
                     false);
-            NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+            NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
             rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             ChartPanel cp = new ChartPanel(chart);
             virtualMachineSummaryPanel_.add(cp);
@@ -151,7 +145,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
             chart = ChartFactory.createXYLineChart("Memory",
                     "x", "y", collection, PlotOrientation.VERTICAL, true, true,
                     false);
-            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
             rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             cp = new ChartPanel(chart);
             virtualMachineSummaryPanel_.add(cp);
@@ -163,7 +157,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
             chart = ChartFactory.createXYLineChart("Tx",
                     "x", "y", collection, PlotOrientation.VERTICAL, true, true,
                     false);
-            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
             rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             cp = new ChartPanel(chart);
             virtualMachineSummaryPanel_.add(cp);
@@ -175,7 +169,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
             chart = ChartFactory.createXYLineChart("Rx",
                     "x", "y", collection, PlotOrientation.VERTICAL, true, true,
                     false);
-            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
             rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             cp = new ChartPanel(chart);
             virtualMachineSummaryPanel_.add(cp);
@@ -194,13 +188,13 @@ public class LocalControllerPopupComponent  extends PopupComponent
     {   
         JLabel label = new JLabel();
         label.setText(localController_.getHostname());
-        hostDescriptionPanel_.add(label);
+        getHostDescriptionPanel().add(label);
         label = new JLabel();
         label.setText(localController_.getControlDataAddress().getAddress());
-        hostDescriptionPanel_.add(label);
+        getHostDescriptionPanel().add(label);
         label = new JLabel();
         label.setText("" + localController_.getControlDataAddress().getPort());        
-        hostDescriptionPanel_.add(label);
+        getHostDescriptionPanel().add(label);
         return true;
     }
     
@@ -232,9 +226,16 @@ public class LocalControllerPopupComponent  extends PopupComponent
          return true;
     }
 
+    /**
+     * 
+     * Updates the popup with the new hierarchy.
+     * 
+     * @param hierarchy             The new hierarchy
+     */
     private void updateHostDescription(
-            GroupLeaderRepositoryInformation hierarchy) {
-        log_.debug("Update the local Controller Popup" + popupComponentId_);
+            GroupLeaderRepositoryInformation hierarchy) 
+    {
+        log_.debug("Update the local Controller Popup" + getPopupComponentId());
         
         for (GroupManagerDescription groupManager : hierarchy.getGroupManagerDescriptions())
         {

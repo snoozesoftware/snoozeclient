@@ -1,6 +1,5 @@
 package org.inria.myriads.snoozeclient.systemtree.popup;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.Map;
@@ -76,7 +75,7 @@ public class GroupManagerPopupComponent extends PopupComponent
         
         initializeGroupManagerPanel();
         display();               
-        log_.debug("group manager component created with id " + popupComponentId_);
+        log_.debug("group manager component created with id " + getPopupComponentId());
     }
 
  
@@ -118,9 +117,15 @@ public class GroupManagerPopupComponent extends PopupComponent
    }
    
     
+   /**
+    * 
+    * Update the hierarchy.
+    * 
+    * @param hierarchy              The new hierarchy
+    */
    private void updateHostDescription(GroupLeaderRepositoryInformation hierarchy) 
    {
-       log_.debug("Update the groupManager Popup" + popupComponentId_);
+       log_.debug("Update the groupManager Popup" + getPopupComponentId());
        for (GroupManagerDescription groupManager : hierarchy.getGroupManagerDescriptions())
        {
            if (groupManager.getId().equals(groupManagerDescription_.getId()))
@@ -142,13 +147,13 @@ public class GroupManagerPopupComponent extends PopupComponent
     {
         JLabel label = new JLabel();
         label.setText(groupManagerDescription_.getHostname());
-        hostDescriptionPanel_.add(label);
+        getHostDescriptionPanel().add(label);
         label = new JLabel();
         label.setText(groupManagerDescription_.getListenSettings().getControlDataAddress().getAddress());
-        hostDescriptionPanel_.add(label);
+        getHostDescriptionPanel().add(label);
         label = new JLabel();
         label.setText("" + groupManagerDescription_.getListenSettings().getControlDataAddress().getPort());        
-        hostDescriptionPanel_.add(label);
+        getHostDescriptionPanel().add(label);
         
         return true;
     }
@@ -208,7 +213,7 @@ public class GroupManagerPopupComponent extends PopupComponent
         ChartPanel cp = new ChartPanel(chart);
         usedSummaryPanel_.add(cp);
          
-        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         
         collection = new XYSeriesCollection();
@@ -219,7 +224,7 @@ public class GroupManagerPopupComponent extends PopupComponent
                 "x", "y", collection, PlotOrientation.VERTICAL, true, true,
                 false);
         
-        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         
         cp = new ChartPanel(chart);
@@ -233,7 +238,7 @@ public class GroupManagerPopupComponent extends PopupComponent
                 "x", "y", collection, PlotOrientation.VERTICAL, true, true,
                 false);
         
-        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         
         cp = new ChartPanel(chart);
@@ -247,7 +252,7 @@ public class GroupManagerPopupComponent extends PopupComponent
                 "x", "y", collection, PlotOrientation.VERTICAL, true, true,
                 false);
         
-        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();;
+        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
         
         cp = new ChartPanel(chart);
@@ -277,28 +282,4 @@ public class GroupManagerPopupComponent extends PopupComponent
     {
         this.groupManagerDescription_ = groupManagerDescription;
     }
-
-    /**
-     * 
-     * Gets the component id.
-     * 
-     * @return the popupComponentId_
-     */
-    public String getPopupComponentId() 
-    {
-        return popupComponentId_;
-    }
-
-    /**
-     * 
-     * Sets the component id.
-     * 
-     * @param popupComponentId the popupComponentId_ to set
-     */
-    public void setPopupComponentId(String popupComponentId) 
-    {
-        popupComponentId_ = popupComponentId;
-    }
-
-   
 }

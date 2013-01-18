@@ -66,10 +66,8 @@ import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.functors.ConstantTransformer;
 import org.inria.myriads.snoozeclient.exception.BootstrapUtilityException;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
-import org.inria.myriads.snoozeclient.systemtree.layout.GeographicalLayout;
 import org.inria.myriads.snoozeclient.systemtree.popup.PopupComponent;
 import org.inria.myriads.snoozeclient.systemtree.popup.PopupGraphMousePlugin;
-import org.inria.myriads.snoozeclient.systemtree.transformers.GeographicalVertexShapeTransformer;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexColorTransformer;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexShapeTransformer;
 import org.inria.myriads.snoozeclient.systemtree.transformers.VertexToolTipTransformer;
@@ -479,21 +477,11 @@ public final class SystemTreeVisualizer extends JFrame
         visualizationViewer.getRenderContext().setArrowFillPaintTransformer(new ConstantTransformer(Color.lightGray)); 
         visualizationViewer.getRenderer().getVertexLabelRenderer().setPosition(Position.CNTR);
         
-        if (layout_)
-        {
-            //visualizationViewer.getRenderContext().setVertexLabelTransformer(new VertexLabelTransformer());
-            visualizationViewer.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
-          //  Transformer vertexShapeTransformer = new GeographicalVertexShapeTransformer();
-            Transformer vertexShapeTransformer = new VertexShapeTransformer();
-            visualizationViewer.getRenderContext().setVertexShapeTransformer(vertexShapeTransformer);
-        }
-        else
-        {
-            visualizationViewer.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
-            Transformer vertexShapeTransformer = new VertexShapeTransformer();
-            visualizationViewer.getRenderContext().setVertexShapeTransformer(vertexShapeTransformer);
-        }
         
+        visualizationViewer.getRenderContext().setVertexLabelTransformer(new ToStringLabeller());
+        Transformer vertexShapeTransformer = new VertexShapeTransformer();
+        visualizationViewer.getRenderContext().setVertexShapeTransformer(vertexShapeTransformer);
+    
         PluggableGraphMouse graphMouse = new PluggableGraphMouse();
         graphMouse.add(new TranslatingGraphMousePlugin(MouseEvent.BUTTON1_MASK));
         graphMouse.add(new PopupGraphMousePlugin(hierarchy_, this));

@@ -27,8 +27,9 @@ public class SnoozeVertex
      * 
      * @param nodeType      The node type.
      * @param hostId        The host id.
+     * @param hostName      The host name.
      */
-    public SnoozeVertex(NodeType nodeType, String hostId, String hostName) 
+    public SnoozeVertex(NodeType nodeType, String hostId, String hostName)
     {
         nodeType_ = nodeType;
         hostId_ = hostId;
