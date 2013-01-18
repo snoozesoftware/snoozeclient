@@ -19,6 +19,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.slf4j.Logger;
@@ -74,7 +75,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
      */
     private void initializeLocalControllerPanel() 
     {
-        GridLayout usedSummaryLayout = new GridLayout(2, 2);
+        GridLayout usedSummaryLayout = new GridLayout(4, 2);
         virtualMachineSummaryPanel_ = new JPanel();
         virtualMachineSummaryPanel_.setLayout(usedSummaryLayout);
         virtualMachineSummaryPanel_.setPreferredSize(new Dimension(800, 400));
@@ -89,32 +90,36 @@ public class LocalControllerPopupComponent  extends PopupComponent
      */
     private void initializevirtualMachineSummaryPanel()
     {
+     
         
+        int numberOfVirtualMachines = 0 ; 
         for (Map.Entry<String, VirtualMachineMetaData> entry : localController_.getVirtualMachineMetaData().entrySet())
         {
+            
             String virtualMachineId = entry.getKey();
             VirtualMachineMetaData virtualMachine = entry.getValue();
             XYSeries usedCPUCapacity = new XYSeries("Used ");
-            XYSeries totalCPUCapacity = new XYSeries("Requested ");
+            XYSeries totalCPUCapacity = new XYSeries("Total ");
             
             XYSeries usedMemoryCapacity = new XYSeries("Used ");
-            XYSeries totalMemoryCapacity = new XYSeries("Requested ");
+            XYSeries totalMemoryCapacity = new XYSeries("Total");
             
             XYSeries usedTxCapacity = new XYSeries("Used ");
-            XYSeries totalTxCapacity = new XYSeries("Requested ");
+            XYSeries totalTxCapacity = new XYSeries("Total");
             
             XYSeries usedRxCapacity = new XYSeries("Used ");
-            XYSeries totalRxCapacity = new XYSeries("Requested ");
+            XYSeries totalRxCapacity = new XYSeries("Total");
             
             int i = 0;
+            int numberOfEntry = virtualMachine.getUsedCapacity().size(); 
             for (Map.Entry<Long , VirtualMachineMonitoringData> monitoringEntry :
                         virtualMachine.getUsedCapacity().entrySet()) 
             {
                 Long timestamp = monitoringEntry.getKey();
                 VirtualMachineMonitoringData summary = monitoringEntry.getValue();
                 usedCPUCapacity.add(i, summary.getUsedCapacity().get(0));
-                totalCPUCapacity.add(i, localController_.getTotalCapacity().get(0));
-                
+                totalCPUCapacity.add(i, localController_.getTotalCapacity().get(0));          
+               
                 usedMemoryCapacity.add(i, summary.getUsedCapacity().get(1));
                 totalMemoryCapacity.add(i, localController_.getTotalCapacity().get(1));
                 
@@ -123,6 +128,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
                 
                 usedRxCapacity.add(i, summary.getUsedCapacity().get(3));
                 totalRxCapacity.add(i, localController_.getTotalCapacity().get(3));
+                
                 i++;
             }
             
