@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineTemplate;
@@ -148,4 +149,32 @@ public interface ClientRepository
                                       String localControllerId,
                                       NetworkAddress groupManagerAddress)
         throws Exception;
+    
+    /**
+     * 
+     * Gets the content of the templates of the virtual machine
+     * 
+     * @param virtualMachineId
+     * @return
+     */
+    String getVirtualMachineTemplateContent(String virtualMachineId)
+        throws Exception;
+    /**
+     * 
+     * Gets the path of the templates of the virtual machine
+     * 
+     * @param virtualMachineId
+     * @return
+     */
+    String getVirtualMachineTemplate(String virtualMachineId)
+            throws Exception;
+    
+    /**
+     * 
+     * Update the network capacity demand.
+     * 
+     * @param networkDemand
+     * @throws Exception
+     */
+    void updateNetworkCapacityDemand(String virtualMachineId, NetworkDemand networkDemand) throws Exception;
 }

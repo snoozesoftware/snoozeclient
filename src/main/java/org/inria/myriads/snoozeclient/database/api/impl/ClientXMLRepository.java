@@ -1167,4 +1167,69 @@ public final class ClientXMLRepository
             virtualMachine.appendChild(groupManagerAddressElement); 
         }   
     }
+
+    @Override
+    public String getVirtualMachineTemplateContent(String virtualMachineId) throws Exception 
+    {
+        Node virtualMachine = getElementByAttribute(AttributeType.vm, virtualMachineId);
+        if (virtualMachine == null)
+        {
+            log_.debug("No such virtual machine available! Define it first!");
+            return null;
+        }
+        String virtualMachineTemplate = getVirtualMachineTemplateFromNode(virtualMachine);
+        TemplateReader templateReader = TemplateReaderFactory.newTemplateReader();
+        String templateContent = templateReader.readTemplateDescription(virtualMachineTemplate);
+        log_.debug(String.format("Virtual machine template: %s, content: %s",
+                                 virtualMachineTemplate, templateContent));
+   
+        return templateContent;
+    }
+
+    @Override
+    public String getVirtualMachineTemplate(String virtualMachineId) throws Exception 
+    {
+        Node virtualMachine = getElementByAttribute(AttributeType.vm, virtualMachineId);
+        if (virtualMachine == null)
+        {
+            log_.debug("No such virtual machine available! Define it first!");
+            return null;
+        }
+        return getVirtualMachineTemplateFromNode(virtualMachine);
+    }
+
+    @Override
+    public void updateNetworkCapacityDemand(String virtualMachineId, NetworkDemand networkDemand) throws Exception 
+    {
+        Node virtualMachine = getElementByAttribute(AttributeType.vm, virtualMachineId);
+        if (virtualMachine == null)
+        {
+            log_.debug("No such virtual machine available! Define it first!");
+            throw new Exception("No such virtual machine available! Define it first!");
+        }
+        Node networkDemandNode = getNodeByName("network_capacity", virtualMachine);
+        if (networkDemandNode == null)
+        {
+            log_.debug("No network demand exist for this virtual machine");
+            Element networkElement = createNetworkCapacityElement(networkDemand);
+            virtualMachine.appendChild(networkElement); 
+        }
+        else
+        {
+            NetworkDemand oldNetworkDemand = getNetworkCapacityRequirementsFromNode(virtualMachine);
+            NetworkDemand newNetworkDemand = new NetworkDemand();
+            newNetworkDemand.setRxBytes(networkDemand.getRxBytes());
+            newNetworkDemand.setTxBytes(networkDemand.getTxBytes());
+            if (networkDemand.getRxBytes()==0)
+                newNetworkDemand.setRxBytes(oldNetworkDemand.getRxBytes());
+            if (networkDemand.getTxBytes()==0)
+                newNetworkDemand.setTxBytes(oldNetworkDemand.getTxBytes());
+            
+            log_.debug("Updating the network demand");
+            virtualMachine.removeChild(networkDemandNode);
+            Element networkElement = createNetworkCapacityElement(newNetworkDemand);
+            virtualMachine.appendChild(networkElement); 
+        } 
+        writeXmlFile();
+    }
 }

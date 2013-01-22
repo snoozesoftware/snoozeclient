@@ -37,6 +37,7 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.ListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.MainCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.RebootCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.RemoveCommand;
+import org.inria.myriads.snoozeclient.parser.api.impl.commands.ResizeCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ResumeCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ShutdownCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.StartCommand;
@@ -45,6 +46,7 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.UndefineCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.VisualizeCommand;
 import org.inria.myriads.snoozeclient.parser.commands.ClientCommand;
 import org.inria.myriads.snoozeclient.parser.output.ParserOutput;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,6 +99,7 @@ public final class JCommanderCLI
         commands_.put(ClientCommand.VISUALIZE, new VisualizeCommand());
         commands_.put(ClientCommand.DUMP, new DumpCommand());
         commands_.put(ClientCommand.REBOOT, new RebootCommand());
+        commands_.put(ClientCommand.RESIZE, new ResizeCommand());
         
         for (ClientCommand command : ClientCommand.values()) 
         {
@@ -233,7 +236,10 @@ public final class JCommanderCLI
             case INFO :
                 clusterCommand(getInfoCommand(), output);
                 break;
-              
+                
+            case RESIZE :
+                resizeCommand(getResizeCommand(), output);
+                break;
             case VISUALIZE :
                 output.setVisualize(true);
                 break;
@@ -249,6 +255,16 @@ public final class JCommanderCLI
         return output;
     }
     
+    private void resizeCommand(ResizeCommand resizeCommand, ParserOutput output)
+    {
+        
+        output.setClusterName(resizeCommand.getVirtualClusterName());
+        output.setVirtualMachineName(resizeCommand.getVirtualMachineName());
+        output.setVcpu(resizeCommand.getVcpu());
+        output.setMemory(resizeCommand.getMemory());
+        output.setNetworkCapacity(new NetworkDemand(resizeCommand.getNetworkRxCapacity(),resizeCommand.getNetworkTxCapacity()));
+    }
+
     /**
      * Checks if help is specified.
      * 
@@ -385,6 +401,16 @@ public final class JCommanderCLI
     public RebootCommand getRebootCommand()
     {
         return (RebootCommand) commands_.get(ClientCommand.REBOOT);
+    }
+    
+    /**
+     * Returns the resize command.
+     * 
+     * @return   The reboot command
+     */
+    public ResizeCommand getResizeCommand()
+    {
+        return (ResizeCommand) commands_.get(ClientCommand.RESIZE);
     }
     
     /**
