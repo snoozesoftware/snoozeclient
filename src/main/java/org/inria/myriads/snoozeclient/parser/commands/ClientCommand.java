@@ -53,7 +53,9 @@ public enum ClientCommand
     /** Dump. */
     DUMP("dump"),
     /** Reboot. */
-    REBOOT("reboot");
+    REBOOT("reboot"),
+    /** Resize. */
+    RESIZE("resize");
     
     /** Command name. */
     private String commandName_;

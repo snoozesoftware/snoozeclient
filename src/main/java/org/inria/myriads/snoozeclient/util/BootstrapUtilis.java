@@ -28,6 +28,7 @@ import java.util.List;
 import org.inria.myriads.snoozeclient.exception.BootstrapUtilityException;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;
@@ -146,4 +147,32 @@ public final class BootstrapUtilis
         }
         return groupLeaderDescription;
     }
+    
+    /**
+     * Returns the complete hierarchy.
+     * 
+     * @param bootstrapAddresse         The bootstrap addresses
+     * @return                          The current group leader description
+     * @throws BootstrapUtilityException 
+     */
+    public static GroupLeaderRepositoryInformation getCompleteHierarchy(List<NetworkAddress> bootstrapAddresse)
+        throws BootstrapUtilityException
+    {
+        Guard.check(bootstrapAddresse);
+        log_.debug("Getting current group leader description");
+        
+        BootstrapAPI bootstrapCommunicator = getActiveBootstrapCommunicator(bootstrapAddresse);
+        if (bootstrapCommunicator == null)
+        {
+            throw new BootstrapUtilityException("Unable to find any active bootstrap node!");
+        }
+        
+        GroupLeaderRepositoryInformation hierarchy = bootstrapCommunicator.getCompleteHierarchy();        
+        if (hierarchy == null)
+        {
+            throw new BootstrapUtilityException("Group leader description is not available!");
+        }
+        return hierarchy;
+    }
+    
 }

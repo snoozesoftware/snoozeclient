@@ -19,9 +19,12 @@
  */
 package org.inria.myriads.snoozeclient.handler;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -41,12 +44,12 @@ import org.inria.myriads.snoozeclient.statistics.results.SubmissionResults;
 import org.inria.myriads.snoozeclient.statistics.util.SubmissionResultsUtils;
 import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
-import org.inria.myriads.snoozeclient.systemtree.util.DumpUtil;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.status.VirtualClusterErrorCode;
@@ -55,8 +58,11 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.Vi
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineTemplate;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.guard.Guard;
+import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
+import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -176,11 +182,113 @@ public final class CommandHandler
                 processDumpCommand(bootstrapNodes, graphGenerator, generalSettings.getDumpOutputFile());
                 break;
                 
+            case RESIZE:
+                processResizeCommand(command);
+                break;
+                
             default:
                 throw new CommandHandlerException(String.format("Unknown cluster command specified: %s", command));
         }
     }
     
+
+    /**
+     * 
+     * Process a resize command.
+     * 
+     * @param command           The client command
+     * @throws Exception        Exception
+     */
+    private void processResizeCommand(ClientCommand command) throws Exception 
+    {
+        Guard.check(command);
+        log_.debug(String.format("Processing collective command: %s", command));
+
+        String virtualMachineName = parserOutput_.getVirtualMachineName();
+        double vcpu = parserOutput_.getVcpu();
+        double memory = parserOutput_.getMemory();
+        double tx = parserOutput_.getNetworkCapacity().getTxBytes();
+        double rx = parserOutput_.getNetworkCapacity().getRxBytes();
+        
+        if (virtualMachineName != null)
+        {
+            processVirtualMachineResize(virtualMachineName, vcpu, memory, tx, rx);
+            return;
+        } 
+        
+        String virtualClusterName = parserOutput_.getVirtualClusterName();
+        if (virtualClusterName != null)
+        {
+            processVirtualClusterResize(virtualClusterName, vcpu, memory, tx, rx);
+            return;
+        }          
+        
+        throw new CommandHandlerException("You must at least specify a virtual machine or cluster name!");
+    }
+        
+
+    /**
+     * 
+     * Process a resize for a cluster.
+     * 
+     * @param virtualClusterName        The virtual cluster 
+     * @param vcpu                      The vcpu demand
+     * @param memory                    The memory demand
+     * @param tx                        The tx demand
+     * @param rx                        The rx demand  
+     * @throws Exception                Exception
+     */
+    private void processVirtualClusterResize(String virtualClusterName,
+            double vcpu, double memory, double tx, double rx) throws Exception 
+    {
+        Guard.check(virtualClusterName, vcpu, memory, tx, rx);
+        
+        List<String> virtualMachineIds = clientRepository_.getVirtualMachineIds(virtualClusterName);        
+        for (String virtualMachineId : virtualMachineIds)
+        {               
+            processVirtualMachineResize(virtualMachineId, vcpu, memory, tx, rx);    
+        }       
+    }
+
+    /**
+     * 
+     * Process a resize for a single virtual machine.
+     * 
+     * @param virtualMachineName        The virtual machine 
+     * @param vcpu                      The vcpu demand
+     * @param memory                    The memory demand
+     * @param tx                        The tx demand
+     * @param rx                        The rx demand  
+     */
+    private void processVirtualMachineResize(String virtualMachineName,
+            double vcpu, double memory, double tx, double rx) 
+    {
+        try
+        {
+            VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
+            String virtualMachineTemplate  = clientRepository_.getVirtualMachineTemplateContent(virtualMachineName);
+            ResizeRequest resizeRequest = new ResizeRequest();
+            ArrayList<Double> requestedCapacity = new ArrayList(Arrays.asList(vcpu, memory, tx, rx));
+            resizeRequest.setResizedCapacity(requestedCapacity);
+            String newXmlDescription = parser.handleResizeRequest(virtualMachineTemplate, resizeRequest);
+            //write the network demand in the client database...
+            clientRepository_.updateNetworkCapacityDemand(virtualMachineName, new NetworkDemand(rx, tx));
+            //write result back to the template
+            String virtualMachineTemplatePath = clientRepository_.getVirtualMachineTemplate(virtualMachineName);
+            BufferedWriter out = new BufferedWriter(new FileWriter(virtualMachineTemplatePath));
+            out.write(newXmlDescription);
+            out.close();
+            log_.info("Resize command successfull for virtual machine " + virtualMachineName);
+        }
+        catch (Exception e)
+        {
+            log_.warn("unable to resize");
+        }
+        
+    }
+
+    
+
     /**
      * Processes the visualize command.
      * 
@@ -217,7 +325,7 @@ public final class CommandHandler
         throws Exception
     {
         GroupManagerDescription groupLeader = BootstrapUtilis.getGroupLeaderDescription(bootstrapNodes);
-        DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
+      //  DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
     }
     
     /**
@@ -636,7 +744,7 @@ public final class CommandHandler
         throws Exception 
     {
         log_.debug("Processing cluster list request");
-        
+
         String virtualClusterName = parserOutput_.getVirtualClusterName();
         if (virtualClusterName != null)
         {
@@ -661,7 +769,7 @@ public final class CommandHandler
         Guard.check(command);
         log_.debug(String.format("Processing collective command: %s", command));
 
-        String virtualMachineName = parserOutput_.getVirtualMachineName();        
+        String virtualMachineName = parserOutput_.getVirtualMachineName();
         if (virtualMachineName != null)
         {
             processVirtualMachineCommand(virtualMachineName, command);
@@ -754,6 +862,7 @@ public final class CommandHandler
         throws Exception
     {
         boolean isSuccessfull = false;
+        log_.error(command.toString());
         switch (command)
         {
             case INFO :
@@ -805,7 +914,8 @@ public final class CommandHandler
                     isSuccessfull = control.destroy(location);
                 }
                 break;
-                                        
+                
+                
             default:
                 throw new CommandHandlerException(String.format("Unknown command specified: %s", command));
         }        

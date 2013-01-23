@@ -26,18 +26,16 @@ import java.util.Map;
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.graph.Forest;
 
-import org.inria.myriads.snoozeclient.exception.SystemTreeGeneratorException;
-import org.inria.myriads.snoozeclient.systemtree.datacollector.SystemDataCollector;
 import org.inria.myriads.snoozeclient.systemtree.enums.NodeType;
 import org.inria.myriads.snoozeclient.systemtree.factory.EdgeFactory;
-import org.inria.myriads.snoozecommon.communication.NetworkAddress;
+import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
-import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupManagerRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerStatus;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.guard.Guard;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,117 +74,106 @@ public final class SystemGraphGenerator
      * @return                                   The graph
      * @throws SystemTreeGeneratorException 
      */
-    public Forest<String, Integer> generateGraph(GroupManagerDescription groupLeader) 
-        throws SystemTreeGeneratorException 
-    {        
-        log_.debug("Starting graph generation");
-                
-        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
-        GroupLeaderRepositoryInformation groupLeaderInformation =
-            SystemDataCollector.getGroupLeaderRepositoryInformation(groupLeaderAddress,
-                                                                    numberOfBacklogEntries_);
-        if (groupLeaderInformation == null)
-        {
-            throw new SystemTreeGeneratorException("Group leader repository information is not available!");
-        }
-        
-        String groupLeaderLabel = createNodeLabel(NodeType.GL, groupLeaderAddress);
-        log_.info(String.format("Adding group leader node: %s", groupLeaderLabel));
-        
-        Forest<String, Integer> graph = new DelegateForest<String, Integer>();  
-        graph.addVertex(groupLeaderLabel);
-        
-        List<GroupManagerDescription> groupManagers = groupLeaderInformation.getGroupManagerDescriptions();
-        for (GroupManagerDescription groupManager : groupManagers) 
-        {
-            NetworkAddress address = groupManager.getListenSettings().getControlDataAddress();
-            String label = createNodeLabel(NodeType.GM, address);           
-            log_.info(String.format("Adding group manager: %s", label));
-            graph.addEdge(edgeFactory_.create(), groupLeaderLabel, label);
-            
-            GroupManagerRepositoryInformation information = 
-                SystemDataCollector.getGroupManagerRepositoryInformations(address,
-                                                                          numberOfBacklogEntries_);
-            if (information == null)
-            {
-                throw new SystemTreeGeneratorException("Group manager repository information is not available!");
-            }
-            
-            addLocalControllerBranch(graph, label, information);
-        }
-        
-        return graph;
-    }
-    
-    /**
-     * Adds a local controller branch.
-     * 
-     * @param graph                         The graph
-     * @param groupManagerLabel             The group manager label
-     * @param groupManagerInformation       The group manager information
-     */
-    private void addLocalControllerBranch(Forest<String, Integer> graph,   
-                                          String groupManagerLabel,
-                                          GroupManagerRepositoryInformation groupManagerInformation) 
-    {        
-        Guard.check(graph, groupManagerLabel, groupManagerInformation);
-        log_.info(String.format("Adding %d local controller to %s", 
-                                 groupManagerInformation.getLocalControllerDescriptions().size(),
-                                 groupManagerLabel));
-                  
-        for (LocalControllerDescription localController : 
-                 groupManagerInformation.getLocalControllerDescriptions()) 
-        {            
-            if (localController.getStatus().equals(LocalControllerStatus.PASSIVE))
-            {
-                log_.info("Ignoring local controller in PASSIVE mode!");
-                continue;
-            }
-            
-            String localControllerLabel = createNodeLabel(NodeType.LC, localController.getControlDataAddress());
-            log_.info(String.format("Adding local controller: %s", localControllerLabel));
-            graph.addEdge(edgeFactory_.create(), groupManagerLabel, localControllerLabel);        
-            addVirtualMachineBranch(graph,
-                                    localControllerLabel, 
-                                    localController.getVirtualMachineMetaData());
-        }
-    }
-    
+
+   
     /**
      * Adds a virtual machine branch.
      * 
      * @param graph                     The graph
-     * @param localControllerLabel      The local controller label
+     * @param localControllerVertex      The local controller vertex
      * @param virtualMachines           The virtual machines
      */
-    private void addVirtualMachineBranch(Forest<String, Integer> graph,
-                                         String localControllerLabel,
+    private void addVirtualMachineBranch(Forest<SnoozeVertex, Integer> graph,
+                                         SnoozeVertex localControllerVertex,
                                          HashMap<String, VirtualMachineMetaData> virtualMachines)
     {
-        Guard.check(graph, localControllerLabel, virtualMachines);
-        log_.info(String.format("Adding virtual machine branch to: %s", localControllerLabel));
+        Guard.check(graph, localControllerVertex, virtualMachines);
+        log_.info(String.format("Adding virtual machine branch to: %s", localControllerVertex.getHostId()));
         
         for (Map.Entry<String, VirtualMachineMetaData> entry : virtualMachines.entrySet()) 
         {
-            String virtualMachineLabel = NodeType.VM + "/" + entry.getKey();
-            log_.info(String.format("Adding virtual machine: %s", virtualMachineLabel));
-            graph.addEdge(edgeFactory_.create(), localControllerLabel, virtualMachineLabel);
+            String virtualMachineId = entry.getKey();
+            String virtualMachineName = virtualMachineId;
+            SnoozeVertex virtualMachineVertex = new SnoozeVertex(NodeType.VM, virtualMachineId, virtualMachineName);
+            log_.info(String.format("Adding virtual machine: %s", virtualMachineVertex.getHostId()));
+            graph.addEdge(edgeFactory_.create(), localControllerVertex, virtualMachineVertex);
         }       
     }
     
+    
+
     /**
-     * Creates the node label.
      * 
-     * @param nodeType         The node type
-     * @param networkAddress   The network address
-     * @return                 The node label
+     * Generates the graph according to the hierarchy.
+     * 
+     * @param hierarchy     The hierarchy.
+     * @return              The graph.
      */
-    private String createNodeLabel(NodeType nodeType, NetworkAddress networkAddress)
+    public Forest<SnoozeVertex, Integer> generateGraph(GroupLeaderRepositoryInformation hierarchy) 
     {
-        Guard.check(networkAddress);
-        log_.debug(String.format("Creating node label for: %s", nodeType));
-                
-        String identifier = nodeType + "/" + networkAddress.getAddress() + ":" + networkAddress.getPort();
-        return identifier;
+        log_.debug("Starting graph generation");
+        
+        Forest<SnoozeVertex, Integer> graph = new DelegateForest<SnoozeVertex, Integer>();
+        SnoozeVertex groupLeaderVertex = new SnoozeVertex(NodeType.GL, "0", "");
+        log_.info(String.format("Adding group leader node: %s", groupLeaderVertex.getHostId()));
+        graph.addVertex(groupLeaderVertex);
+        
+        List<GroupManagerDescription> groupManagers = hierarchy.getGroupManagerDescriptions();
+        for (GroupManagerDescription groupManager : groupManagers) 
+        {
+            //String groupManagerLabel = createNodeLabel(NodeType.GM, groupManager.getId());
+            SnoozeVertex groupManagerVertex = new SnoozeVertex(NodeType.GM, 
+                                                                groupManager.getId(),
+                                                                groupManager.getHostname());
+            log_.info(String.format("Adding group manager: %s", groupManagerVertex.getHostId()));
+            graph.addEdge(edgeFactory_.create(), groupLeaderVertex, groupManagerVertex);
+            
+            if (groupManager.getLocalControllers() != null)
+                addLocalControllerBranch(graph, groupManagerVertex, groupManager.getLocalControllers());
+        }
+        
+        return graph;
     }
+
+    /**
+     * 
+     * Add a local controller branch to the graph.
+     * 
+     * @param graph                     the graph under construction.
+     * @param groupManagerVertex        the vertex
+     * @param localControllers          the local controllers
+     */
+    private void addLocalControllerBranch(Forest<SnoozeVertex, Integer> graph,
+            SnoozeVertex groupManagerVertex,
+            HashMap<String, LocalControllerDescription> localControllers) 
+    {
+
+        Guard.check(graph, groupManagerVertex, localControllers);
+        log_.info(String.format("Adding %d local controller to %s", 
+                                 localControllers.size(),
+                                 groupManagerVertex));
+               
+        
+        for (Map.Entry<String, LocalControllerDescription> entry : localControllers.entrySet()) 
+        {
+            LocalControllerDescription localController = entry.getValue();
+            NodeType nodeType = NodeType.LC;
+            if (localController.getStatus().equals(LocalControllerStatus.PASSIVE))
+            {
+                log_.info("local controller in PASSIVE mode!");
+                nodeType = NodeType.LC_PASSIVE;
+            }
+
+            SnoozeVertex localControllerVertex = new SnoozeVertex(nodeType,
+                                                                  localController.getId(),
+                                                                  localController.getHostname());
+            log_.info(String.format("Adding local controller: %s", localControllerVertex));
+            graph.addEdge(edgeFactory_.create(), groupManagerVertex, localControllerVertex);        
+            addVirtualMachineBranch(graph,
+                                    localControllerVertex, 
+                                    localController.getVirtualMachineMetaData());
+        }
+        
+    }
+
 }

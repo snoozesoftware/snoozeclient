@@ -44,6 +44,12 @@ public final class ParserOutput
     /** Network capacity. */
     private NetworkDemand networkCapacity_;
 
+    /** vcpu requirement. */
+    private double vcpu_;
+    
+    /** memory requirement. */
+    private double memory_;
+    
     /** Visualization. */
     private boolean isVisualize_;
     
@@ -194,5 +200,37 @@ public final class ParserOutput
     public boolean isDump() 
     {
         return isDump_;
+    }
+
+    /**
+     * @return the vcpu
+     */
+    public double getVcpu() 
+    {
+        return vcpu_;
+    }
+
+    /**
+     * @param vcpu the vcpu_ to set
+     */
+    public void setVcpu(double vcpu)
+    {
+        this.vcpu_ = vcpu;
+    }
+
+    /**
+     * @return the memory
+     */
+    public double getMemory() 
+    {
+        return memory_;
+    }
+
+    /**
+     * @param memory the memory to set
+     */
+    public void setMemory(double memory)
+    {
+        this.memory_ = memory;
     }
 }

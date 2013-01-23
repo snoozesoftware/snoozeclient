@@ -8,5 +8,6 @@ Homepage: http://snooze.inria.fr
 
 Package: snoozeclient
 Architecture: all
+
 Depends:
 Description: A command-line interface (CLI) for the Snooze cloud management framework.
