@@ -257,7 +257,6 @@ public final class JCommanderCLI
     
     private void resizeCommand(ResizeCommand resizeCommand, ParserOutput output)
     {
-        
         output.setClusterName(resizeCommand.getVirtualClusterName());
         output.setVirtualMachineName(resizeCommand.getVirtualMachineName());
         output.setVcpu(resizeCommand.getVcpu());

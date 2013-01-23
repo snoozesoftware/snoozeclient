@@ -205,7 +205,6 @@ public final class CommandHandler
         
         if (virtualMachineName != null)
         {
-            log_.error("vcpu = "+vcpu);
             processVirtualMachineResize(virtualMachineName, vcpu,memory,tx,rx);
             return;
         } 
@@ -250,6 +249,7 @@ public final class CommandHandler
             BufferedWriter out = new BufferedWriter(new FileWriter(virtualMachineTemplatePath));
             out.write(newXmlDescription);
             out.close();
+            log_.info("Resize command successfull for virtual machine " + virtualMachineName);
         }
         catch(Exception e)
         {
@@ -886,9 +886,6 @@ public final class CommandHandler
                 }
                 break;
                 
-            case RESIZE:
-                isSuccessfull = control.resize(control,location);
-                break;
                 
             default:
                 throw new CommandHandlerException(String.format("Unknown command specified: %s", command));
