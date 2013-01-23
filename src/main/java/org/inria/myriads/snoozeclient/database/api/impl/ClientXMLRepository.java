@@ -1220,9 +1220,9 @@ public final class ClientXMLRepository
             NetworkDemand newNetworkDemand = new NetworkDemand();
             newNetworkDemand.setRxBytes(networkDemand.getRxBytes());
             newNetworkDemand.setTxBytes(networkDemand.getTxBytes());
-            if (networkDemand.getRxBytes()==0)
+            if (networkDemand.getRxBytes() == 0)
                 newNetworkDemand.setRxBytes(oldNetworkDemand.getRxBytes());
-            if (networkDemand.getTxBytes()==0)
+            if (networkDemand.getTxBytes() == 0)
                 newNetworkDemand.setTxBytes(oldNetworkDemand.getTxBytes());
             
             log_.debug("Updating the network demand");

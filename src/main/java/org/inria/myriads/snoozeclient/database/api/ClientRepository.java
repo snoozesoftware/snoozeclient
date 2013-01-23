@@ -143,7 +143,6 @@ public interface ClientRepository
      * @param localControllerId     The local controller identifier
      * @param groupManagerAddress   The group manager address
      * @throws Exception 
-     * @throws Exception 
      */
     void updateVirtualMachineMetaData(String virtualMachineId, 
                                       String localControllerId,
@@ -152,19 +151,22 @@ public interface ClientRepository
     
     /**
      * 
-     * Gets the content of the templates of the virtual machine
+     * Gets the content of the templates of the virtual machine.
      * 
-     * @param virtualMachineId
-     * @return
+     * @param virtualMachineId          The virtual machine id
+     * @return                          The content of the template
+     * @throws Exception 
      */
     String getVirtualMachineTemplateContent(String virtualMachineId)
         throws Exception;
+    
     /**
      * 
-     * Gets the path of the templates of the virtual machine
+     * Gets the path of the templates of the virtual machine.
      * 
-     * @param virtualMachineId
-     * @return
+     * @param virtualMachineId          The virtual machine id
+     * @return                          The template path
+     * @throws Exception
      */
     String getVirtualMachineTemplate(String virtualMachineId)
             throws Exception;
@@ -173,8 +175,10 @@ public interface ClientRepository
      * 
      * Update the network capacity demand.
      * 
-     * @param networkDemand
+     * @param virtualMachineId          The virtual machine id
+     * @param networkDemand             The network demand
      * @throws Exception
      */
-    void updateNetworkCapacityDemand(String virtualMachineId, NetworkDemand networkDemand) throws Exception;
+    void updateNetworkCapacityDemand(String virtualMachineId, NetworkDemand networkDemand) 
+            throws Exception;
 }

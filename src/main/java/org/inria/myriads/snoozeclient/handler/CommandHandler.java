@@ -192,6 +192,13 @@ public final class CommandHandler
     }
     
 
+    /**
+     * 
+     * Process a resize command.
+     * 
+     * @param command           The client command
+     * @throws Exception        Exception
+     */
     private void processResizeCommand(ClientCommand command) throws Exception 
     {
         Guard.check(command);
@@ -205,14 +212,14 @@ public final class CommandHandler
         
         if (virtualMachineName != null)
         {
-            processVirtualMachineResize(virtualMachineName, vcpu,memory,tx,rx);
+            processVirtualMachineResize(virtualMachineName, vcpu, memory, tx, rx);
             return;
         } 
         
         String virtualClusterName = parserOutput_.getVirtualClusterName();
         if (virtualClusterName != null)
         {
-            processVirtualClusterResize(virtualClusterName, vcpu,memory,tx,rx);
+            processVirtualClusterResize(virtualClusterName, vcpu, memory, tx, rx);
             return;
         }          
         
@@ -220,30 +227,52 @@ public final class CommandHandler
     }
         
 
+    /**
+     * 
+     * Process a resize for a cluster.
+     * 
+     * @param virtualClusterName        The virtual cluster 
+     * @param vcpu                      The vcpu demand
+     * @param memory                    The memory demand
+     * @param tx                        The tx demand
+     * @param rx                        The rx demand  
+     * @throws Exception                Exception
+     */
     private void processVirtualClusterResize(String virtualClusterName,
             double vcpu, double memory, double tx, double rx) throws Exception 
     {
-        Guard.check(virtualClusterName, vcpu,memory,tx,rx);
+        Guard.check(virtualClusterName, vcpu, memory, tx, rx);
         
         List<String> virtualMachineIds = clientRepository_.getVirtualMachineIds(virtualClusterName);        
         for (String virtualMachineId : virtualMachineIds)
         {               
-            processVirtualMachineResize(virtualMachineId, vcpu,memory,tx,rx);    
+            processVirtualMachineResize(virtualMachineId, vcpu, memory, tx, rx);    
         }       
     }
 
+    /**
+     * 
+     * Process a resize for a single virtual machine.
+     * 
+     * @param virtualMachineName        The virtual machine 
+     * @param vcpu                      The vcpu demand
+     * @param memory                    The memory demand
+     * @param tx                        The tx demand
+     * @param rx                        The rx demand  
+     */
     private void processVirtualMachineResize(String virtualMachineName,
             double vcpu, double memory, double tx, double rx) 
     {
-        try{
+        try
+        {
             VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
             String virtualMachineTemplate  = clientRepository_.getVirtualMachineTemplateContent(virtualMachineName);
             ResizeRequest resizeRequest = new ResizeRequest();
-            ArrayList<Double> requestedCapacity = new ArrayList(Arrays.asList(vcpu,memory,tx,rx));
+            ArrayList<Double> requestedCapacity = new ArrayList(Arrays.asList(vcpu, memory, tx, rx));
             resizeRequest.setResizedCapacity(requestedCapacity);
-            String newXmlDescription = parser.handleResizeRequest(virtualMachineTemplate,resizeRequest);
+            String newXmlDescription = parser.handleResizeRequest(virtualMachineTemplate, resizeRequest);
             //write the network demand in the client database...
-            clientRepository_.updateNetworkCapacityDemand(virtualMachineName,new NetworkDemand(rx,tx));
+            clientRepository_.updateNetworkCapacityDemand(virtualMachineName, new NetworkDemand(rx, tx));
             //write result back to the template
             String virtualMachineTemplatePath = clientRepository_.getVirtualMachineTemplate(virtualMachineName);
             BufferedWriter out = new BufferedWriter(new FileWriter(virtualMachineTemplatePath));
@@ -251,7 +280,7 @@ public final class CommandHandler
             out.close();
             log_.info("Resize command successfull for virtual machine " + virtualMachineName);
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             log_.warn("unable to resize");
         }

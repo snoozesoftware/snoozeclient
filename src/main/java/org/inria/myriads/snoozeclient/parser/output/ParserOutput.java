@@ -211,9 +211,9 @@ public final class ParserOutput
     }
 
     /**
-     * @param vcpu_ the vcpu_ to set
+     * @param vcpu the vcpu_ to set
      */
-    public void setVcpu(double vcpu) 
+    public void setVcpu(double vcpu)
     {
         this.vcpu_ = vcpu;
     }

@@ -255,13 +255,21 @@ public final class JCommanderCLI
         return output;
     }
     
+    /**
+     * 
+     * Resize Command.
+     * 
+     * @param resizeCommand     The resize command
+     * @param output            The parser output
+     */
     private void resizeCommand(ResizeCommand resizeCommand, ParserOutput output)
     {
         output.setClusterName(resizeCommand.getVirtualClusterName());
         output.setVirtualMachineName(resizeCommand.getVirtualMachineName());
         output.setVcpu(resizeCommand.getVcpu());
         output.setMemory(resizeCommand.getMemory());
-        output.setNetworkCapacity(new NetworkDemand(resizeCommand.getNetworkRxCapacity(),resizeCommand.getNetworkTxCapacity()));
+        output.setNetworkCapacity(new NetworkDemand(resizeCommand.getNetworkRxCapacity(), 
+                resizeCommand.getNetworkTxCapacity()));
     }
 
     /**
