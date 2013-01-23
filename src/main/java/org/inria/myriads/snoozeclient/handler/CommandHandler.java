@@ -155,11 +155,15 @@ public final class CommandHandler
             case RESUME :
                 processCollectiveCommand(command);
                 break;
-                
+            
             case SHUTDOWN :
                 processCollectiveCommand(command);
                 break;
              
+            case REBOOT :
+                processCollectiveCommand(command);
+                break;
+                
             case DESTROY :
                 processCollectiveCommand(command);
                 break;
@@ -785,6 +789,13 @@ public final class CommandHandler
                 if (control != null)
                 {
                     isSuccessfull = control.shutdown(location);
+                }
+                break;
+                
+            case REBOOT:
+                if (control != null)
+                {
+                    isSuccessfull = control.reboot(location);
                 }
                 break;
                 

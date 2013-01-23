@@ -158,15 +158,23 @@ public final class JavaPropertyClientConfigurator
      * @return                      The list of bootstrap addresses
      */
     private List<NetworkAddress> generateListOfNetworkAddresses(List<String> bootstrapAddresses)
+        throws ClientConfiguratorException
     {
         List<NetworkAddress> networkAddresses = new ArrayList<NetworkAddress>();
         for (int i = 0; i < bootstrapAddresses.size(); i++)
         {
             String[] bootstrapEntry = bootstrapAddresses.get(i).split(":");
-            String ipAddress = bootstrapEntry[0];
-            int port = Integer.valueOf(bootstrapEntry[1]);
-            NetworkAddress networkAddress = NetworkUtils.createNetworkAddress(ipAddress, port);
-            networkAddresses.add(networkAddress);
+                try{
+                    String ipAddress = bootstrapEntry[0];
+                    int port = Integer.valueOf(bootstrapEntry[1]);
+                    NetworkAddress networkAddress = NetworkUtils.createNetworkAddress(ipAddress, port);
+                    networkAddresses.add(networkAddress);
+                }
+                catch(ArrayIndexOutOfBoundsException e)
+                {
+                	throw new ClientConfiguratorException("wrong address in the bootstrap configuration file") ;
+                }
+                
         }     
         return networkAddresses;
     }
