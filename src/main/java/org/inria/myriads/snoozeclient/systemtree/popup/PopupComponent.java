@@ -1,7 +1,10 @@
 package org.inria.myriads.snoozeclient.systemtree.popup;
 
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.HeadlessException;
+import java.awt.Insets;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.UUID;
@@ -30,13 +33,17 @@ import org.slf4j.LoggerFactory;
 public abstract class PopupComponent extends JFrame 
 {
     
+    
+
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerPopupComponent.class);
-
+    
+    /** Summary panel. */
+    protected JPanel usedSummaryPanel_;
+    
     /** Main panel. */
     private JPanel hostDescriptionPanel_;
-    
-    
+        
     /** The Component id. */
     private String popupComponentId_;
     
@@ -85,14 +92,32 @@ public abstract class PopupComponent extends JFrame
         
         setResizable(false);
         setDefaultLookAndFeelDecorated(false);
-        GridBagLayout hostLayout = new GridBagLayout();       
+        this.setPreferredSize(new Dimension(800, 600));
+        GridBagLayout hostLayout = new GridBagLayout();
+        GridBagConstraints c = new GridBagConstraints();
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setLayout(hostLayout);
         
         hostDescriptionPanel_ = new JPanel();
         hostDescriptionPanel_.setBorder(BorderFactory.createTitledBorder("Host description"));
+        c.gridx = 0; 
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.weightx = 10;
+        c.weighty = 10;
+        add(hostDescriptionPanel_, c);
         
-        add(hostDescriptionPanel_);
+        usedSummaryPanel_ = new JPanel();
+        usedSummaryPanel_.setBorder(BorderFactory.createTitledBorder("Summary Information"));
+        c.gridy = 1;
+        c.weightx = 90;
+        c.weighty = 90;
+        c.insets = new Insets(2, 2, 2, 2);
+        add(usedSummaryPanel_, c);
+        pack();
         
         addWindowListener(new WindowListener() {
             

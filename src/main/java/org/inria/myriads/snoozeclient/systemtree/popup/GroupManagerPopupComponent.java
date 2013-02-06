@@ -5,7 +5,6 @@ import java.awt.GridLayout;
 import java.util.Map;
 
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
@@ -13,6 +12,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDes
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.groupmanager.summary.GroupManagerSummaryInformation;
 import org.inria.myriads.snoozecommon.datastructure.LRUCache;
+import org.inria.myriads.snoozecommon.globals.Globals;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -50,9 +50,7 @@ public class GroupManagerPopupComponent extends PopupComponent
     private GroupManagerDescription groupManagerDescription_;
    
     
- 
-    /** summary panel. */
-    private JPanel usedSummaryPanel_;
+
    
    
     
@@ -87,11 +85,8 @@ public class GroupManagerPopupComponent extends PopupComponent
     {
        
        GridLayout usedSummaryLayout = new GridLayout(2, 2);
-       usedSummaryPanel_ = new JPanel();
        usedSummaryPanel_.setLayout(usedSummaryLayout);
-       usedSummaryPanel_.setPreferredSize(new Dimension(800, 400));
        initializeSummaryPanel();
-       getContentPane().add(usedSummaryPanel_);
    }
 
    @Override
@@ -184,17 +179,17 @@ public class GroupManagerPopupComponent extends PopupComponent
             GroupManagerSummaryInformation summary = entry.getValue();
             
             //cpu
-            usedCPUCapacity.add(i, summary.getUsedCapacity().get(0));
-            requestedCPUCapacity.add(i, summary.getRequestedCapacity().get(0));
+            usedCPUCapacity.add(i, summary.getUsedCapacity().get(Globals.CPU_UTILIZATION_INDEX));
+            requestedCPUCapacity.add(i, summary.getRequestedCapacity().get(Globals.CPU_UTILIZATION_INDEX));
             
-            usedMemoryCapacity.add(i, summary.getUsedCapacity().get(1));
-            requestedMemoryCapacity.add(i, summary.getRequestedCapacity().get(1));
+            usedMemoryCapacity.add(i, summary.getUsedCapacity().get(Globals.MEMORY_UTILIZATION_INDEX));
+            requestedMemoryCapacity.add(i, summary.getRequestedCapacity().get(Globals.MEMORY_UTILIZATION_INDEX));
             
-            usedTxCapacity.add(i, summary.getUsedCapacity().get(2));
-            requestedTxCapacity.add(i, summary.getRequestedCapacity().get(2));
+            usedTxCapacity.add(i, summary.getUsedCapacity().get(Globals.NETWORK_TX_UTILIZATION_INDEX));
+            requestedTxCapacity.add(i, summary.getRequestedCapacity().get(Globals.NETWORK_TX_UTILIZATION_INDEX));
             
-            usedRxCapacity.add(i, summary.getUsedCapacity().get(3));
-            requestedRxCapacity.add(i, summary.getRequestedCapacity().get(3));
+            usedRxCapacity.add(i, summary.getUsedCapacity().get(Globals.NETWORK_RX_UTILIZATION_INDEX));
+            requestedRxCapacity.add(i, summary.getRequestedCapacity().get(Globals.NETWORK_RX_UTILIZATION_INDEX));
             
             i++;
 

@@ -1,7 +1,12 @@
 package org.inria.myriads.snoozeclient.systemtree.popup;
 
-import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
+import java.sql.Timestamp;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Map;
 
 import javax.swing.JLabel;
@@ -14,12 +19,13 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.repository.Grou
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
+import org.inria.myriads.snoozecommon.datastructure.LRUCache;
+import org.inria.myriads.snoozecommon.globals.Globals;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.slf4j.Logger;
@@ -38,15 +44,23 @@ public class LocalControllerPopupComponent  extends PopupComponent
     /** default serial id.*/
    private static final long serialVersionUID = 1L;
 
-
+   /** Monitoring values to take into account. */
+   private static int MONITORING_VALUES = 1;
+   
    /** Define the logger. */
    private static final Logger log_ = LoggerFactory.getLogger(GroupManagerPopupComponent.class);
 
    /** LocalControllerDescription.*/
    private LocalControllerDescription localController_;
       
-   /** virtual machines panel.*/
-   private JPanel virtualMachineSummaryPanel_;
+   /** Resources Panel.*/
+   private JPanel resourcesPanel_;
+   
+   /** Graph Panel.*/
+   private JPanel graphPanel_;
+   
+   /** Cache values. */
+   private LRUCache<Long, ArrayList<Double>> usedAverageCapacity_;
         
     /**
      * 
@@ -60,6 +74,7 @@ public class LocalControllerPopupComponent  extends PopupComponent
                                             String hostId, SystemTreeVisualizer systemTreeVisualizer)
     {
         super(systemTreeVisualizer);
+        usedAverageCapacity_ = new LRUCache<Long, ArrayList<Double>>(10); 
         log_.debug("Creation of the new local controller component");
         localController_ = localController;
         initializeHostPanel();
@@ -75,12 +90,11 @@ public class LocalControllerPopupComponent  extends PopupComponent
      */
     private void initializeLocalControllerPanel() 
     {
-        GridLayout usedSummaryLayout = new GridLayout(4, 2);
-        virtualMachineSummaryPanel_ = new JPanel();
-        virtualMachineSummaryPanel_.setLayout(usedSummaryLayout);
-        virtualMachineSummaryPanel_.setPreferredSize(new Dimension(800, 400));
+        GridBagLayout usedSummaryLayout = new GridBagLayout();
+        usedSummaryPanel_.setLayout(usedSummaryLayout);
+        
         initializevirtualMachineSummaryPanel();
-        getContentPane().add(virtualMachineSummaryPanel_);
+        
     }
 
     /**
@@ -91,96 +105,214 @@ public class LocalControllerPopupComponent  extends PopupComponent
     private void initializevirtualMachineSummaryPanel()
     {
      
+        //Should display only the load 
+        // CPU load / Treshold / Total for example
+        double cpuUsed = 0; 
+        double memUsed = 0;
+        double rxUsed = 0;
+        double txUsed = 0;
         
-        int numberOfVirtualMachines = 0 ; 
+        resourcesPanel_ = new JPanel();
+        resourcesPanel_.setLayout(new GridLayout(4, 2));
+        
+        
+        graphPanel_ = new JPanel();
+        graphPanel_.setLayout(new GridLayout(2, 2));
+        
+        int numberOfVirtualMachines = 0;
         for (Map.Entry<String, VirtualMachineMetaData> entry : localController_.getVirtualMachineMetaData().entrySet())
         {
+            double cpuAverage = 0;
+            double memAverage = 0;
+            double rxAverage = 0;
+            double txAverage = 0;
             
             String virtualMachineId = entry.getKey();
             VirtualMachineMetaData virtualMachine = entry.getValue();
-            XYSeries usedCPUCapacity = new XYSeries("Used ");
-            XYSeries totalCPUCapacity = new XYSeries("Total ");
             
-            XYSeries usedMemoryCapacity = new XYSeries("Used ");
-            XYSeries totalMemoryCapacity = new XYSeries("Total");
-            
-            XYSeries usedTxCapacity = new XYSeries("Used ");
-            XYSeries totalTxCapacity = new XYSeries("Total");
-            
-            XYSeries usedRxCapacity = new XYSeries("Used ");
-            XYSeries totalRxCapacity = new XYSeries("Total");
-            
-            int i = 0;
+            int i = 1;
             int numberOfEntry = virtualMachine.getUsedCapacity().size(); 
             for (Map.Entry<Long , VirtualMachineMonitoringData> monitoringEntry :
                         virtualMachine.getUsedCapacity().entrySet()) 
             {
+                if (i > MONITORING_VALUES)
+                {
+                    break;
+                }
                 Long timestamp = monitoringEntry.getKey();
                 VirtualMachineMonitoringData summary = monitoringEntry.getValue();
-                usedCPUCapacity.add(i, summary.getUsedCapacity().get(0));
-                totalCPUCapacity.add(i, localController_.getTotalCapacity().get(0));          
-               
-                usedMemoryCapacity.add(i, summary.getUsedCapacity().get(1));
-                totalMemoryCapacity.add(i, localController_.getTotalCapacity().get(1));
+                      
+                cpuAverage += summary.getUsedCapacity().get(Globals.CPU_UTILIZATION_INDEX);
+                memAverage += summary.getUsedCapacity().get(Globals.MEMORY_UTILIZATION_INDEX);
+                rxAverage += summary.getUsedCapacity().get(Globals.NETWORK_RX_UTILIZATION_INDEX);
+                txAverage += summary.getUsedCapacity().get(Globals.NETWORK_TX_UTILIZATION_INDEX);
                 
-                usedTxCapacity.add(i, summary.getUsedCapacity().get(2));
-                totalTxCapacity.add(i, localController_.getTotalCapacity().get(2));
-                
-                usedRxCapacity.add(i, summary.getUsedCapacity().get(3));
-                totalRxCapacity.add(i, localController_.getTotalCapacity().get(3));
                 
                 i++;
             }
             
-            //CPU
-            XYSeriesCollection collection = new XYSeriesCollection();
-            collection.addSeries(usedCPUCapacity);
-            collection.addSeries(totalCPUCapacity);
-            JFreeChart chart = ChartFactory.createXYLineChart("CPU",
-                    "x", "y", collection, PlotOrientation.VERTICAL, true, true,
-                    false);
-            NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
-            rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-            ChartPanel cp = new ChartPanel(chart);
-            virtualMachineSummaryPanel_.add(cp);
+            if (i != 0)
+            {
+                cpuAverage = cpuAverage / i;
+                memAverage = memAverage / i;
+                rxAverage = rxAverage / i;
+                txAverage = txAverage / i;
+            }
             
-            //Memory
-            collection = new XYSeriesCollection();
-            collection.addSeries(usedMemoryCapacity);
-            collection.addSeries(totalMemoryCapacity);
-            chart = ChartFactory.createXYLineChart("Memory",
-                    "x", "y", collection, PlotOrientation.VERTICAL, true, true,
-                    false);
-            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
-            rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-            cp = new ChartPanel(chart);
-            virtualMachineSummaryPanel_.add(cp);
-            
-            //Tx
-            collection = new XYSeriesCollection();
-            collection.addSeries(usedTxCapacity);
-            collection.addSeries(totalRxCapacity);
-            chart = ChartFactory.createXYLineChart("Tx",
-                    "x", "y", collection, PlotOrientation.VERTICAL, true, true,
-                    false);
-            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
-            rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-            cp = new ChartPanel(chart);
-            virtualMachineSummaryPanel_.add(cp);
-            
-            //Rx
-            collection = new XYSeriesCollection();
-            collection.addSeries(usedTxCapacity);
-            collection.addSeries(totalRxCapacity);
-            chart = ChartFactory.createXYLineChart("Rx",
-                    "x", "y", collection, PlotOrientation.VERTICAL, true, true,
-                    false);
-            rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
-            rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-            cp = new ChartPanel(chart);
-            virtualMachineSummaryPanel_.add(cp);
+            cpuUsed += cpuAverage;
+            memUsed += memAverage;
+            rxUsed += rxAverage;
+            txUsed += txAverage;
             
         }
+        
+
+        
+        DecimalFormat format = new DecimalFormat("#.##"); 
+        JLabel cpuDemandLabel = new JLabel("Cpu Used : " + format.format(cpuUsed));
+        double cpuTotal = localController_.getTotalCapacity().get(Globals.CPU_UTILIZATION_INDEX);
+        JLabel cpuTotalLabel = new JLabel("Cpu Total : " + format.format(cpuTotal));
+        
+        JLabel memDemandLabel = new JLabel("Mem Used : " + format.format(memUsed));
+        double memTotal = localController_.getTotalCapacity().get(Globals.MEMORY_UTILIZATION_INDEX);
+        JLabel memTotalLabel = new JLabel("Mem Total : " + format.format(memTotal));
+        
+        JLabel rxDemandLabel = new JLabel("Rx Used : " + format.format(rxUsed));
+        double rxTotal = localController_.getTotalCapacity().get(Globals.NETWORK_RX_UTILIZATION_INDEX);
+        JLabel rxTotalLabel = new JLabel("Rx Total : " + format.format(rxTotal));
+       
+        JLabel txDemandLabel = new JLabel("Tx Used : " + format.format(txUsed));
+        double txTotal = localController_.getTotalCapacity().get(Globals.NETWORK_TX_UTILIZATION_INDEX);
+        JLabel txTotalLabel = new JLabel("Tx Total : " + format.format(txTotal));
+        
+        resourcesPanel_.add(cpuDemandLabel);
+        resourcesPanel_.add(cpuTotalLabel);
+        resourcesPanel_.add(memDemandLabel);
+        resourcesPanel_.add(memTotalLabel);
+        resourcesPanel_.add(rxDemandLabel);
+        resourcesPanel_.add(rxTotalLabel);
+        resourcesPanel_.add(txDemandLabel);
+        resourcesPanel_.add(txTotalLabel);
+        
+
+        
+        ArrayList<Double> currentAverage = new ArrayList<Double>();
+        currentAverage.add(cpuUsed);
+        currentAverage.add(memUsed);
+        currentAverage.add(rxUsed);
+        currentAverage.add(txUsed);
+        Long timeStamp = new Timestamp(System.currentTimeMillis()).getTime();
+        usedAverageCapacity_.put(timeStamp, currentAverage);
+        
+        
+
+        XYSeries usedCPUCapacity = new XYSeries("Used ");
+        XYSeries requestedCPUCapacity = new XYSeries("Total ");
+        
+        XYSeries usedMemoryCapacity = new XYSeries("Used ");
+        XYSeries requestedMemoryCapacity = new XYSeries("Total ");
+        
+        XYSeries usedTxCapacity = new XYSeries("Used ");
+        XYSeries requestedTxCapacity = new XYSeries("Total ");
+        
+        XYSeries usedRxCapacity = new XYSeries("Used ");
+        XYSeries requestedRxCapacity = new XYSeries("Total ");
+        int i = 0;
+        for (Map.Entry<Long, ArrayList<Double>> entry : usedAverageCapacity_.entrySet())
+        {
+            
+            Long timestamp = entry.getKey();
+            ArrayList<Double> summary = entry.getValue();
+            //cpu
+            usedCPUCapacity.add(i, summary.get(Globals.CPU_UTILIZATION_INDEX));
+            requestedCPUCapacity.add(i, cpuTotal);
+            
+            usedMemoryCapacity.add(i, summary.get(Globals.MEMORY_UTILIZATION_INDEX));
+            requestedMemoryCapacity.add(i, memTotal);
+            
+            usedTxCapacity.add(i, summary.get(Globals.NETWORK_TX_UTILIZATION_INDEX));
+            requestedTxCapacity.add(i, txTotal);
+            
+            usedRxCapacity.add(i, summary.get(Globals.NETWORK_RX_UTILIZATION_INDEX));
+            requestedRxCapacity.add(i, rxTotal);
+            
+            i++;
+        }
+        
+        XYSeriesCollection collection = new XYSeriesCollection();
+        collection.addSeries(usedCPUCapacity);
+        collection.addSeries(requestedCPUCapacity);
+        
+        
+        JFreeChart chart = ChartFactory.createXYLineChart("CPU",
+                "x", "y", collection, PlotOrientation.VERTICAL, true, true,
+                false);
+        ChartPanel cp = new ChartPanel(chart);
+        graphPanel_.add(cp);
+         
+        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        
+        collection = new XYSeriesCollection();
+        collection.addSeries(usedMemoryCapacity);
+        collection.addSeries(requestedMemoryCapacity);
+        
+        chart = ChartFactory.createXYLineChart("Memory",
+                "x", "y", collection, PlotOrientation.VERTICAL, true, true,
+                false);
+        
+        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        
+        cp = new ChartPanel(chart);
+        graphPanel_.add(cp);
+        
+        collection = new XYSeriesCollection();
+        collection.addSeries(usedTxCapacity);
+        collection.addSeries(requestedTxCapacity);
+        
+        chart = ChartFactory.createXYLineChart("Tx",
+                "x", "y", collection, PlotOrientation.VERTICAL, true, true,
+                false);
+        
+        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        
+        cp = new ChartPanel(chart);
+        graphPanel_.add(cp);
+        
+        collection = new XYSeriesCollection();
+        collection.addSeries(usedRxCapacity);
+        collection.addSeries(requestedRxCapacity);
+        
+        chart = ChartFactory.createXYLineChart("Rx",
+                "x", "y", collection, PlotOrientation.VERTICAL, true, true,
+                false);
+        
+        rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+        
+        cp = new ChartPanel(chart);
+        graphPanel_.add(cp); 
+        
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0; 
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.gridheight = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.weightx = 10; 
+        c.weighty = 10;
+        usedSummaryPanel_.add(resourcesPanel_, c);
+
+        c.gridy = 1;
+        c.weightx = 90;
+        c.weighty = 90;
+        c.insets = new Insets(2, 2, 2, 2);
+        usedSummaryPanel_.add(graphPanel_, c);
+        
+        pack();
     }
 
     
@@ -218,13 +350,14 @@ public class LocalControllerPopupComponent  extends PopupComponent
         {
             public void run() 
             {
-                virtualMachineSummaryPanel_.removeAll();
-                GridLayout usedSummaryLayout = new GridLayout(2, 2);
-                virtualMachineSummaryPanel_.setLayout(usedSummaryLayout);
-                virtualMachineSummaryPanel_.setPreferredSize(new Dimension(800, 400));
+                usedSummaryPanel_.removeAll();
+                //GridLayout usedSummaryLayout = new GridLayout(2, 2);
+
+                //usedSummaryPanel_.setPreferredSize(new Dimension(800, 400));
                 initializevirtualMachineSummaryPanel();
-                virtualMachineSummaryPanel_.revalidate();
-                virtualMachineSummaryPanel_.repaint();
+                
+                usedSummaryPanel_.revalidate();
+                usedSummaryPanel_.repaint();
             }
         });  
         
