@@ -175,7 +175,7 @@ public final class CommandHandler
                 break;
                 
             case VISUALIZE :
-                processVisualizeCommand(bootstrapNodes, graphGenerator);
+                processVisualizeCommand(clientConfiguration_, graphGenerator);
                 break;
                 
             case DUMP :
@@ -292,11 +292,11 @@ public final class CommandHandler
     /**
      * Processes the visualize command.
      * 
-     * @param bootstrapNodes    The bootstrap nodes
-     * @param graphGenerator    The graph generator
-     * @throws Exception        The exception
+     * @param clientConfiguration   The client configuration
+     * @param graphGenerator        The graph generator
+     * @throws Exception            The exception
      */
-    private void processVisualizeCommand(final List<NetworkAddress> bootstrapNodes,
+    private void processVisualizeCommand(final ClientConfiguration clientConfiguration,
                                          final SystemGraphGenerator graphGenerator)
         throws Exception
     {
@@ -305,7 +305,7 @@ public final class CommandHandler
         {
             public void run() 
             {
-                SystemTreeVisualizer visualizer = new SystemTreeVisualizer(bootstrapNodes, graphGenerator);
+                SystemTreeVisualizer visualizer = new SystemTreeVisualizer(clientConfiguration, graphGenerator);
                 visualizer.setVisible(true); 
             }
         });           

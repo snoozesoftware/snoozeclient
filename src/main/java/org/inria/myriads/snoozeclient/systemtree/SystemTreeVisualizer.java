@@ -64,6 +64,7 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position;
 
 import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.functors.ConstantTransformer;
+import org.inria.myriads.snoozeclient.configurator.api.ClientConfiguration;
 import org.inria.myriads.snoozeclient.exception.BootstrapUtilityException;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
 import org.inria.myriads.snoozeclient.systemtree.popup.PopupComponent;
@@ -92,7 +93,7 @@ public final class SystemTreeVisualizer extends JFrame
     private static final Logger log_ = LoggerFactory.getLogger(SystemTreeVisualizer.class);
     
     /** Default polling interval .*/
-    private static String DEFAULT_POLLING_INTERVAL = "3";
+    private static String DEFAULT_POLLING_INTERVAL = "30";
     
     /** Serial. */
     private static final long serialVersionUID = -1877608073494399896L;
@@ -126,21 +127,25 @@ public final class SystemTreeVisualizer extends JFrame
     private GroupLeaderRepositoryInformation hierarchy_;
 
     /** Popup opened. */
-    private Map<String, PopupComponent> popupComponents_ = new HashMap<String, PopupComponent>(); 
+    private Map<String, PopupComponent> popupComponents_ = new HashMap<String, PopupComponent>();
+
+    /** Graph polling interval.*/
+    private int graphPollingInterval_; 
     
     /**
      * Constructor.
      * 
-     * @param bootstrapNodes   The bootstrap nodes
-     * @param graphGenerator   The graph generator
+     * @param clientConfiguration   The client configuration
+     * @param graphGenerator        The graph generator
      */
-    public SystemTreeVisualizer(List<NetworkAddress> bootstrapNodes,
+    public SystemTreeVisualizer(ClientConfiguration clientConfiguration,
                                 SystemGraphGenerator graphGenerator)
     {
         super("Snooze Hierarchy Visualizer");
-        Guard.check(bootstrapNodes, graphGenerator); 
+        Guard.check(clientConfiguration, graphGenerator); 
         
-        bootstrapNodes_ = bootstrapNodes;
+        bootstrapNodes_ = clientConfiguration.getGeneralSettings().getBootstrapNodes();
+        graphPollingInterval_ = clientConfiguration.getGeneralSettings().getGraphPollingInterval();
         graphGenerator_ = graphGenerator;
         initializeGUI();
     }
@@ -426,7 +431,7 @@ public final class SystemTreeVisualizer extends JFrame
         pollingPanel.add(pollingInterval_);
         pollingInterval_.setHorizontalAlignment(SwingConstants.CENTER);
         pollingInterval_.setBackground(UIManager.getColor("Button.background"));
-        pollingInterval_.setText(DEFAULT_POLLING_INTERVAL);
+        pollingInterval_.setText(String.valueOf(graphPollingInterval_));
         pollingInterval_.setBorder(BorderFactory.createTitledBorder("Polling Interval"));
         pollingInterval_.setColumns(3);
         

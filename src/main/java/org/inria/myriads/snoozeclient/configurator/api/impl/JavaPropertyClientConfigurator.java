@@ -98,6 +98,9 @@ public final class JavaPropertyClientConfigurator
         String numberOfMonitoringEntries = getPropertyContent("general.numberOfMonitoringEntries");
         generalSettings.setNumberOfMonitoringEntries(Integer.valueOf(numberOfMonitoringEntries));        
         clientConfiguration_.setGeneralSettings(generalSettings);
+        
+        String graphPollingInterval = getPropertyContent("general.graphPollingInterval");
+        generalSettings.setGraphPollingInterval(Integer.valueOf(graphPollingInterval));
     }
         
     /** 

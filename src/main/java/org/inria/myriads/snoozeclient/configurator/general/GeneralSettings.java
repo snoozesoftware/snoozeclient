@@ -42,6 +42,9 @@ public class GeneralSettings
     /** Graph output file name. */
     private String dumpOutputFile_;
     
+    /** Visualization polling interval. */
+    private int graphPollingInterval_;
+    
     /**
      * Sets the output file.
      * 
@@ -120,5 +123,28 @@ public class GeneralSettings
     public final List<NetworkAddress> getBootstrapNodes() 
     {
         return bootstrapNodes_;
+    }
+
+    /***
+     * 
+     * Gets the polling interval.
+     * 
+     * 
+     * @return the graphPollingInterval
+     */
+    public int getGraphPollingInterval() 
+    {
+        return graphPollingInterval_;
+    }
+
+    /**
+     * 
+     * Sets the polling interval.
+     * 
+     * @param graphPollingInterval the graphPollingInterval to set
+     */
+    public void setGraphPollingInterval(int graphPollingInterval) 
+    {
+        graphPollingInterval_ = graphPollingInterval;
     }
 }
