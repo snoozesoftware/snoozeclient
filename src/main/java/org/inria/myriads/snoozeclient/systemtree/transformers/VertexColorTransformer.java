@@ -39,7 +39,7 @@ public final class VertexColorTransformer
     private static final Logger log_ = LoggerFactory.getLogger(VertexColorTransformer.class);
     
     /** Colors. */
-    private final Color[] colors_ = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.BLACK}; 
+    private final Color[] colors_ = {Color.RED, Color.GREEN, Color.WHITE, Color.YELLOW, Color.BLACK}; 
 
     /**
      * Transforms.
