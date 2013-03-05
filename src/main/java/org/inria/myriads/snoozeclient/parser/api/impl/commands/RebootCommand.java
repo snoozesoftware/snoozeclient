@@ -22,11 +22,11 @@ package org.inria.myriads.snoozeclient.parser.api.impl.commands;
 import com.beust.jcommander.Parameters;
 
 /**
- * Shutdown command.
+ * Reboot command.
  * 
  * @author Eugen Feller
  */
-@Parameters(separators = "=", commandDescription = "Shutdown virtual cluster/machine")
+@Parameters(separators = "=", commandDescription = "Reboot virtual cluster/machine")
 public final class RebootCommand extends ClusterCommandBase 
 {    
 }
