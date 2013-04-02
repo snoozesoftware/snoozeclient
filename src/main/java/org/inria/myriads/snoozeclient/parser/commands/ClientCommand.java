@@ -55,7 +55,9 @@ public enum ClientCommand
     /** Reboot. */
     REBOOT("reboot"),
     /** Resize. */
-    RESIZE("resize");
+    RESIZE("resize"),
+    /** HostsList. */
+    HOSTS("hosts");
     
     /** Command name. */
     private String commandName_;

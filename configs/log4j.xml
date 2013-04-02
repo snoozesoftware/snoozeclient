@@ -70,7 +70,7 @@
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozeclient">
-		<level value="DEBUG"/>
+		<level value="INFO"/>
 		<appender-ref ref="FA"/>
 		<appender-ref ref="CA"/>
 	</logger>

@@ -29,6 +29,10 @@ import org.inria.myriads.snoozeclient.parser.api.impl.validation.PositiveInteger
  * 
  * @author Eugen Feller
  */
+/**
+ * @author msimonin
+ *
+ */
 @Parameters(separators = "=", commandDescription = "Add virtual machine to the cluster")
 public final class AddCommand extends HelpCommandBase
 {        
@@ -52,11 +56,15 @@ public final class AddCommand extends HelpCommandBase
                validateWith = PositiveIntegerValidator.class)
     private int networkTxCapaciy_;  
     
+    @Parameter(names = {"-hid", "--hostId"}, description = "Hosts id on which the vm will attemt to start")
+    private String hostId_;
+    
     /** Constructor. */
     public AddCommand()
     {
         networkRxCapacity_ = 12800;
         networkTxCapaciy_ = 12800;
+        hostId_="";
     }
     
     /**
@@ -97,5 +105,21 @@ public final class AddCommand extends HelpCommandBase
     public String getVirtualMachineTemplate() 
     {
         return virtualMachineTemplate_;
+    }
+
+    /**
+     * @return the hostId
+     */
+    public String getHostId() 
+    {
+        return hostId_;
+    }
+
+    /**
+     * @param hostId the hostId to set
+     */
+    public void setHostId(String hostId) 
+    {
+        hostId_ = hostId;
     }
 }

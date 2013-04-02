@@ -47,6 +47,10 @@ import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
@@ -185,12 +189,35 @@ public final class CommandHandler
             case RESIZE:
                 processResizeCommand(command);
                 break;
-                
+            case HOSTS:
+                processHosts();
+                break;
             default:
                 throw new CommandHandlerException(String.format("Unknown cluster command specified: %s", command));
         }
     }
     
+
+    /**
+     * 
+     * Process the hosts list request.
+     * @throws BootstrapUtilityException 
+     * @throws CommandHandlerException 
+     * 
+     */
+    private void processHosts() throws CommandHandlerException, BootstrapUtilityException 
+    {
+        // TODO Auto-generated method stub
+        GroupManagerDescription groupLeader = getGroupLeaderDescription(); 
+        
+        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();
+        GroupManagerAPI groupLeaderCommunicator = CommunicatorFactory.newGroupManagerCommunicator(groupLeaderAddress); 
+        
+        LocalControllerList localControllers = groupLeaderCommunicator.getLocalControllerList();
+        
+        for (LocalControllerDescription localController : localControllers.getLocalControllers())
+            displayLocalControllerDescription(localController);
+    }
 
     /**
      * 
@@ -325,7 +352,7 @@ public final class CommandHandler
         throws Exception
     {
         GroupManagerDescription groupLeader = BootstrapUtilis.getGroupLeaderDescription(bootstrapNodes);
-      //  DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
+        //DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
     }
     
     /**
@@ -381,6 +408,7 @@ public final class CommandHandler
         VirtualMachineTemplate template = new VirtualMachineTemplate();
         template.setLibVirtTemplate(virtualMachineTemplate);
         template.setNetworkCapacityDemand(parserOutput_.getNetworkCapacity());
+        template.setHostId(parserOutput_.getHostId());
         isAdded = clientRepository_.addVirtualMachineTemplate(template, parserOutput_.getVirtualClusterName());        
         if (!isAdded)
         {
@@ -648,6 +676,47 @@ public final class CommandHandler
                                 groupManagerAddress,
                                 localControllerAddress,
                                 output.getFinalStatus()));
+    }
+    
+    /**
+     * 
+     * Displays the local controller list
+     * 
+     * @param localControllers
+     */
+    private void displayLocalControllerDescription(LocalControllerDescription localController)
+    {
+        Guard.check(localController);
+        log_.debug("Printing local controllers list");
+        String header = "%-40.40s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s";
+        if (isFirst_)
+        {
+            log_.info(String.format(header, 
+                                    "UUID", "address:port", "VCPUs", "Memory", 
+                                    "Tx", "Rx", "Status"));    
+            String divider = "------------------------------------------------------------------------------------" +
+                             "------------------------------------------------------------------------------------" +
+                             "------------------";
+            log_.info(divider);
+            isFirst_ = false;
+        }
+              
+        String localControllerId = localController.getId();
+        String address = localController.getControlDataAddress().toString();
+        Double vcpus = localController.getTotalCapacity().get(Globals.CPU_UTILIZATION_INDEX);
+        Double memory = localController.getTotalCapacity().get(Globals.MEMORY_UTILIZATION_INDEX);
+        Double tx = localController.getTotalCapacity().get(Globals.NETWORK_TX_UTILIZATION_INDEX);
+        Double rx = localController.getTotalCapacity().get(Globals.NETWORK_RX_UTILIZATION_INDEX);
+        String status = String.valueOf(localController.getStatus());
+        log_.info(String.format(header,
+                                localControllerId,
+                                address,
+                                vcpus,
+                                memory,
+                                tx,
+                                rx,
+                                status
+                                ));
     }
     
     /**

@@ -29,6 +29,7 @@ import org.inria.myriads.snoozeclient.exception.BootstrapUtilityException;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
+import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.guard.Guard;

@@ -32,6 +32,7 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.Command;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DefineCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DestroyCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DumpCommand;
+import org.inria.myriads.snoozeclient.parser.api.impl.commands.HostsCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.InfoCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.MainCommand;
@@ -100,6 +101,7 @@ public final class JCommanderCLI
         commands_.put(ClientCommand.DUMP, new DumpCommand());
         commands_.put(ClientCommand.REBOOT, new RebootCommand());
         commands_.put(ClientCommand.RESIZE, new ResizeCommand());
+        commands_.put(ClientCommand.HOSTS, new HostsCommand());
         
         for (ClientCommand command : ClientCommand.values()) 
         {
@@ -240,6 +242,10 @@ public final class JCommanderCLI
             case RESIZE :
                 resizeCommand(getResizeCommand(), output);
                 break;
+                
+            case HOSTS :  
+                hostsCommand(getHostsCommand(), output);
+                break;
             case VISUALIZE :
                 output.setVisualize(true);
                 break;
@@ -270,6 +276,18 @@ public final class JCommanderCLI
         output.setMemory(resizeCommand.getMemory());
         output.setNetworkCapacity(new NetworkDemand(resizeCommand.getNetworkRxCapacity(), 
                 resizeCommand.getNetworkTxCapacity()));
+    }
+    
+    /**
+     * 
+     * Hosts Command.
+     * 
+     * @param resizeCommand     The resize command
+     * @param output            The parser output
+     */
+    private void hostsCommand(HostsCommand hostsCommand, ParserOutput output)
+    {
+  
     }
 
     /**
@@ -325,6 +343,7 @@ public final class JCommanderCLI
         output.setVirtualMachineTemplate(addCommand.getVirtualMachineTemplate());
         output.getNetworkCapacity().setRxBytes(addCommand.getNetworkRxCapacity());
         output.getNetworkCapacity().setTxBytes(addCommand.getNetworkTxCapaciy());
+        output.setHostId(addCommand.getHostId());
         return output;
     }
     
@@ -469,4 +488,15 @@ public final class JCommanderCLI
     {
         return (ListCommand) commands_.get(ClientCommand.LIST);
     }
+    
+    /**
+     * Returns the list command.
+     * 
+     * @return   The list command
+     */
+    public HostsCommand getHostsCommand()
+    {
+        return (HostsCommand) commands_.get(ClientCommand.HOSTS);
+    }
+    
 }

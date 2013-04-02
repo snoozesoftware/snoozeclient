@@ -56,6 +56,9 @@ public final class ParserOutput
     /** Dump. */
     private boolean isDump_;
     
+    /** Host id.*/
+    private String hostId_;
+    
     /** Constructor. */
     public ParserOutput()
     {
@@ -232,5 +235,23 @@ public final class ParserOutput
     public void setMemory(double memory)
     {
         this.memory_ = memory;
+    }
+
+    /**
+     * @return the hostId
+     */
+    public String getHostId() 
+    {
+        return hostId_;
+    }
+
+    /**
+     * 
+     * 
+     * @param hostId the hostId to set
+     */
+    public void setHostId(String hostId) 
+    {
+        hostId_ = hostId;
     }
 }

@@ -48,6 +48,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.status.Virtua
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineTemplate;
+import org.inria.myriads.snoozecommon.globals.Globals;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.NetworkUtils;
 import org.slf4j.Logger;
@@ -414,12 +415,20 @@ public final class ClientXMLRepository
         Element networkDemand = createNetworkCapacityElement(description.getNetworkCapacityDemand());
         virtualMachine.appendChild(networkDemand);
         
+        Element hostId = createNetwortCapacityElement(description.getHostId());
+        virtualMachine.appendChild(hostId);
+        
         cluster.appendChild(virtualMachine);
         writeXmlFile();
         
         return true;
     }
     
+    private Element createNetwortCapacityElement(String hostId) {
+        Element element = createElementWithContent("hostId", hostId);
+        return element;
+    }
+
     /**
      * Creates a virtual machine node.
      * 
@@ -544,13 +553,19 @@ public final class ClientXMLRepository
             log_.debug("Network capacity is NULL!");
             return null;
         }
+        String hostId = getHostIdFromNode(virtualMachine);
         
         VirtualMachineTemplate template = new VirtualMachineTemplate();
         template.setLibVirtTemplate(templateContent); 
         template.setNetworkCapacityDemand(networkCapacity);
+        if (hostId!=null)
+        {
+            template.setHostId(hostId);
+        }
         return template;
     }
-    
+
+
     /**
      * Creates virtual cluster templates.
      * 
@@ -898,6 +913,29 @@ public final class ClientXMLRepository
         return networkDemand;
     }
     
+    
+
+    /**
+     * 
+     * Return hostId from node.
+     * 
+     * @param virtualMachine
+     * @return
+     */
+    private String getHostIdFromNode(Node virtualMachine) {
+        Guard.check(virtualMachine);
+        log_.debug("Getting host id from xml template");
+        
+        NodeList childList = virtualMachine.getChildNodes();  
+        if (childList == null)
+        {
+            log_.debug("The child list is NULL!");
+            return null;
+        }
+        String hostId = getContentFromNodeList("hostId", childList);
+        
+        return hostId;
+    }
     /**
      * Returns the group manager control data address.
      * 
