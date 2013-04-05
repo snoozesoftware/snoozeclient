@@ -292,24 +292,52 @@ public final class CommandHandler
     {
         try
         {
-            VirtualClusterParser parser = VirtualClusterParserFactory.newVirtualClusterParser();
-            String virtualMachineTemplate  = clientRepository_.getVirtualMachineTemplateContent(virtualMachineName);
+            Guard.check(virtualMachineName, vcpu, memory, tx, rx);
+            
+            VirtualMachineMetaData metaData = clientRepository_.getVirtualMachineMetaData(virtualMachineName);
+            if (metaData == null)
+            {
+                log_.error(String.format("Virtual machine: %s meta data not found! Is it added?", virtualMachineName));
+                return;
+            }
+            VirtualMachineLocation location = metaData.getVirtualMachineLocation();
+            
             ResizeRequest resizeRequest = new ResizeRequest();
-            ArrayList<Double> requestedCapacity = new ArrayList(Arrays.asList(vcpu, memory, tx, rx));
+            ArrayList<Double> requestedCapacity = new ArrayList<Double>(Arrays.asList(vcpu, memory, tx, rx));
             resizeRequest.setResizedCapacity(requestedCapacity);
-            String newXmlDescription = parser.handleResizeRequest(virtualMachineTemplate, resizeRequest);
-            //write the network demand in the client database...
-            clientRepository_.updateNetworkCapacityDemand(virtualMachineName, new NetworkDemand(rx, tx));
-            //write result back to the template
-            String virtualMachineTemplatePath = clientRepository_.getVirtualMachineTemplate(virtualMachineName);
-            BufferedWriter out = new BufferedWriter(new FileWriter(virtualMachineTemplatePath));
-            out.write(newXmlDescription);
-            out.close();
-            log_.info("Resize command successfull for virtual machine " + virtualMachineName);
+            resizeRequest.setVirtualMachineLocation(location);
+            
+            log_.debug(String.format("Command: %s for virtual machine: %s on local controller %s", 
+                                      "resize", virtualMachineName, location.getLocalControllerId()));
+
+            NetworkAddress groupManagerAddress = metaData.getGroupManagerControlDataAddress();
+            VirtualClusterControl virtualClusterControl = createVirtualClusterControl(location, groupManagerAddress);
+            
+            VirtualMachineMetaData newVirtualMachineMetaData = 
+                    virtualClusterControl.resize(resizeRequest);
+            
+            if (newVirtualMachineMetaData != null)
+            {
+                log_.info("Resize command successfull for virtual machine " + virtualMachineName);
+            }
+            else
+            {
+                log_.info("Resize command failed for virtual machine " + virtualMachineName);
+            }
+//FAKE resize here...  
+//            String newXmlDescription = parser.handleResizeRequest(virtualMachineTemplate, resizeRequest);
+//            //write the network demand in the client database...
+//            clientRepository_.updateNetworkCapacityDemand(virtualMachineName, new NetworkDemand(rx, tx));
+//            //write result back to the template
+//            String virtualMachineTemplatePath = clientRepository_.getVirtualMachineTemplate(virtualMachineName);
+//            BufferedWriter out = new BufferedWriter(new FileWriter(virtualMachineTemplatePath));
+//            out.write(newXmlDescription);
+//            out.close();
+            
         }
         catch (Exception e)
         {
-            log_.warn("unable to resize");
+            log_.warn("Resize Command Failed");
         }
         
     }

@@ -870,9 +870,13 @@ public final class ClientXMLRepository
           {
               if (node.getNodeName().equals(tag)) 
               {
-                  String content = node.getChildNodes().item(0).getNodeValue();
-                  log_.debug(String.format("Content: %s", content));
-                  return content;
+                  if (node.getChildNodes().getLength()>0)
+                  {
+                      String content = node.getChildNodes().item(0).getNodeValue();
+                      log_.debug(String.format("Content: %s", content));
+                      return content;
+                  }
+                  
               } 
           }
         }

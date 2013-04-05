@@ -28,6 +28,7 @@ import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.Meta
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualMachineLocation;
+import org.inria.myriads.snoozecommon.communication.virtualmachine.ResizeRequest;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.util.TimeUtils;
 import org.slf4j.Logger;
@@ -193,5 +194,11 @@ public final class VirtualClusterControl
     {
         Guard.check(location);
         return groupManagerCommunicator_.destroyVirtualMachine(location);
+    }
+    
+    public VirtualMachineMetaData resize(ResizeRequest resizeRequest)
+    {
+        Guard.check(resizeRequest);
+        return groupManagerCommunicator_.resizeVirtualMachine(resizeRequest);
     }
 }
