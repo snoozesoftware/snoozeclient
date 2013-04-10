@@ -4,13 +4,16 @@ The Snooze command-line interface (CLI).
 What's new ?
 
 * Get the local controller lists.
-    $) snoozeclient hosts
+
+        $) snoozeclient hosts
 
 * Start on a specific local controller.
-    $) snoozeclient add -vcn <cluster> -vmt <vmtemplate> -hid <hostuuid>
+
+        $) snoozeclient add -vcn <cluster> -vmt <vmtemplate> -hid <hostuuid>
 
 * Resize vm 
-    $) snoozeclient resize -vcn <cluster> [ -vmn <vmname>
+
+        $) snoozeclient resize -vcn <cluster> [ -vmn <vmname>
  
 
 ## Installation and Usage
