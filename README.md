@@ -13,7 +13,7 @@ What's new ?
 
 * Resize vm 
 
-        $) snoozeclient resize -vcn <cluster> [ -vmn <vmname>
+        $) snoozeclient resize -vcn <cluster> [-vmn <vmname>]
  
 
 ## Installation and Usage
