@@ -692,7 +692,7 @@ public final class CommandHandler
         
         ConsoleOutput output = generateInformationOutput(virtualMachine);      
         String virtualMachineAddress = virtualMachine.getIpAddress();
-        String groupManagerAddress = virtualMachine.getGroupManagerControlDataAddress().getAddress();
+        String groupManagerAddress =virtualMachine.getVirtualMachineLocation().getGroupManagerControlDataAddress().getAddress();
         String localControllerAddress = virtualMachine.getVirtualMachineLocation().
                                             getLocalControllerControlDataAddress().getAddress();
         log_.info(String.format(header,
