@@ -52,8 +52,6 @@ import org.slf4j.LoggerFactory;
 public abstract class PopupComponent extends JFrame 
 {
     
-    
-
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(GroupManagerPopupComponent.class);
     
