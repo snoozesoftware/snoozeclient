@@ -166,7 +166,7 @@ public interface ClientRepository
      * 
      * @param virtualMachineId          The virtual machine id
      * @return                          The template path
-     * @throws Exception
+     * @throws Exception                Exception
      */
     String getVirtualMachineTemplate(String virtualMachineId)
             throws Exception;
@@ -177,7 +177,7 @@ public interface ClientRepository
      * 
      * @param virtualMachineId          The virtual machine id
      * @param networkDemand             The network demand
-     * @throws Exception
+     * @throws Exception                Exception
      */
     void updateNetworkCapacityDemand(String virtualMachineId, NetworkDemand networkDemand) 
             throws Exception;
