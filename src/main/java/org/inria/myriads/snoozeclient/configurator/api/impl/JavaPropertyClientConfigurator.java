@@ -73,6 +73,7 @@ public final class JavaPropertyClientConfigurator
         
         setGeneralSettings();
         setStatisticsSettings();
+        
     }
 
     /**
@@ -89,6 +90,10 @@ public final class JavaPropertyClientConfigurator
         List<NetworkAddress> networkAddresses = generateListOfNetworkAddresses(bootstrapAddresses);
         generalSettings.setBootstrapNodes(networkAddresses);
         
+        String imagesRepositoryAddress= getPropertyContent("general.imagesRepositoryAddress");
+        NetworkAddress networkAddress = generateListOfNetworkAddresses(imagesRepositoryAddress);
+        generalSettings.setImagesRepository(networkAddress);
+        
         String submissionPollingInterval = getPropertyContent("general.submissionPollingInterval");
         generalSettings.setSubmissionPollingInterval(Integer.valueOf(submissionPollingInterval));
         
@@ -103,6 +108,24 @@ public final class JavaPropertyClientConfigurator
         generalSettings.setGraphPollingInterval(Integer.valueOf(graphPollingInterval));
     }
         
+    private NetworkAddress generateListOfNetworkAddresses(String imagesRepositoryAddress) 
+            throws ClientConfiguratorException 
+    {
+    
+        String[] entry = imagesRepositoryAddress.split(":");
+        try
+        {
+            String ipAddress = entry[0];
+            int port = Integer.valueOf(entry[1]);
+            NetworkAddress networkAddress = NetworkUtils.createNetworkAddress(ipAddress, port);
+            return networkAddress;
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            throw new ClientConfiguratorException("wrong address for the images respository");
+        }
+    }
+
     /** 
      * Returns the client configuration.
      *  

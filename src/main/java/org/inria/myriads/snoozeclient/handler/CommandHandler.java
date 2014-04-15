@@ -64,6 +64,10 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
 import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
+import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
+import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImageList;
+import org.inria.myriads.snoozeimages.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozeimages.communication.rest.api.ImagesRepositoryAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,6 +189,10 @@ public final class CommandHandler
             case RESIZE:
                 processResizeCommand(command);
                 break;
+             
+            case IMAGESLIST:
+                processImagesListCommand(command);
+                break;
                 
             default:
                 throw new CommandHandlerException(String.format("Unknown cluster command specified: %s", command));
@@ -192,6 +200,51 @@ public final class CommandHandler
     }
     
 
+    private void processImagesListCommand(ClientCommand command) 
+    {
+        log_.debug("processing images list command");
+        NetworkAddress imagesRepositoryAddress = 
+                clientConfiguration_.getGeneralSettings().getImagesRepository();
+        ImagesRepositoryAPI imagesRepositoryAPI = CommunicatorFactory.newImagesRepositoryCommunicator(imagesRepositoryAddress);
+        VirtualMachineImageList imagesList = imagesRepositoryAPI.getImagesList();
+        
+        displayImagesList(imagesList);
+    }
+
+    
+    /**
+     * Print the virtual machine information.
+     * 
+     * @param virtualMachine  The virtual machine meta data
+     */
+    private void displayImagesList(VirtualMachineImageList virtualMachineImageList)
+    {
+        Guard.check(virtualMachineImageList);
+        log_.debug("Printing images list");
+         
+        String header = "%-25.25s \t  %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s";
+        
+        log_.info(String.format(header, 
+                                "Name", "Capacity", "Allocation", 
+                                "Format", "BackingStore"));    
+        String divider = "------------------------------------------------------------------------------------" +
+                         "------------------------------------------------------------------------------------" +
+                         "------------------";
+        log_.info(divider);
+        
+        for (VirtualMachineImage image : virtualMachineImageList.getImages())
+        {
+            log_.info(String.format(header,
+                    image.getName(),
+                    image.getCapacity(),
+                    image.getAllocation(),
+                    image.getFormat(),
+                    image.getBackingStore()
+                    ));
+        }
+        
+    }
+    
     /**
      * 
      * Process a resize command.
@@ -205,7 +258,7 @@ public final class CommandHandler
         log_.debug(String.format("Processing collective command: %s", command));
 
         String virtualMachineName = parserOutput_.getVirtualMachineName();
-        double vcpu = parserOutput_.getVcpu();
+        double vcpu = parserOutput_.getVcpus();
         double memory = parserOutput_.getMemory();
         double tx = parserOutput_.getNetworkCapacity().getTxBytes();
         double rx = parserOutput_.getNetworkCapacity().getRxBytes();
@@ -373,14 +426,22 @@ public final class CommandHandler
         
         boolean isAdded = false;
         String virtualMachineTemplate = parserOutput_.getVirtualMachineTemplate();
-        if (virtualMachineTemplate == null)
+        String virtualMachineImage = parserOutput_.getVirtualMachineImage();
+        if (virtualMachineTemplate == null && virtualMachineImage == null)
         {
-            throw new CommandHandlerException("Add command failed! You must specify a virtual machine template!");
+            throw new CommandHandlerException("" +
+            		"Add command failed! " +
+            		"You must specify either a virtual machine template or an image name");
         }
 
         VirtualMachineTemplate template = new VirtualMachineTemplate();
         template.setLibVirtTemplate(virtualMachineTemplate);
         template.setNetworkCapacityDemand(parserOutput_.getNetworkCapacity());
+        template.setVcpus(parserOutput_.getVcpus());
+        template.setMemory(parserOutput_.getMemory());
+        template.setImageId(virtualMachineImage);
+        template.setName(parserOutput_.getVirtualMachineName());
+        
         isAdded = clientRepository_.addVirtualMachineTemplate(template, parserOutput_.getVirtualClusterName());        
         if (!isAdded)
         {

@@ -397,8 +397,8 @@ public final class ClientXMLRepository
             log_.debug("Unable to find the cluster");
             return false;
         }
+        String virtualMachineId = getVirtualMachineId(description);
         
-        String virtualMachineId = getVirtualMachineIdFromTemplate(description.getLibVirtTemplate());
         boolean doesExist = hasAttribute(AttributeType.vm, virtualMachineId);
         if (doesExist)
         {
@@ -408,9 +408,30 @@ public final class ClientXMLRepository
         
         Element virtualMachine = createVirtualMachineNode(virtualMachineId);
         
-        Element libVirtTemplate = createLibVirtTemplateElement(description.getLibVirtTemplate());
-        virtualMachine.appendChild(libVirtTemplate);
+        // template based
+        if (description.getLibVirtTemplate() != null)
+        {
+            Element libVirtTemplate = createLibVirtTemplateElement(description.getLibVirtTemplate());
+            virtualMachine.appendChild(libVirtTemplate);
+        }
+            
+        // flavor based
+        if (description.getLibVirtDescription() == null)
+        {
+            Element name =  createNameElement(description.getName());
+            virtualMachine.appendChild(name);
+            
+            Element image =  createImageElement(description.getImageId());
+            virtualMachine.appendChild(image);
+            
+            Element vcpusDemand =  createVcpusDemandElement(description.getVcpus());
+            virtualMachine.appendChild(vcpusDemand);
+            
+            Element memoryDemand =  createMemoryDemandElement(description.getMemory());
+            virtualMachine.appendChild(memoryDemand);
+        }
         
+        // common
         Element networkDemand = createNetworkCapacityElement(description.getNetworkCapacityDemand());
         virtualMachine.appendChild(networkDemand);
         
@@ -420,6 +441,43 @@ public final class ClientXMLRepository
         return true;
     }
     
+    private Element createNameElement(String name) 
+    {
+        Element element = createElementWithContent("name", String.valueOf(name));
+        return element;
+    }
+
+    private Element createMemoryDemandElement(long memory) 
+    {
+        Element element = createElementWithContent("memory", String.valueOf(memory));
+        return element;
+    }
+
+    private Element createVcpusDemandElement(int vcpus) 
+    {
+        Element element = createElementWithContent("vcpus", String.valueOf(vcpus));
+        return element;
+    }
+
+    private Element createImageElement(String imageId) 
+    {
+        Element element = createElementWithContent("imageId", imageId);
+        return element;
+    }
+
+    private String getVirtualMachineId(VirtualMachineTemplate description) throws Exception 
+    {
+        log_.debug("Getting the name from the command line");
+        if (description.getLibVirtTemplate() == null)
+        {
+            log_.debug("no template given, search name in the cli");
+            return description.getName();
+        }
+            
+        log_.debug("extract the name from the template");
+        return getVirtualMachineIdFromTemplate(description.getLibVirtTemplate());
+    }
+
     /**
      * Creates a virtual machine node.
      * 

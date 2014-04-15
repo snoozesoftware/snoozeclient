@@ -32,6 +32,7 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.Command;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DefineCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DestroyCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DumpCommand;
+import org.inria.myriads.snoozeclient.parser.api.impl.commands.ImagesListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.InfoCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.MainCommand;
@@ -100,6 +101,7 @@ public final class JCommanderCLI
         commands_.put(ClientCommand.DUMP, new DumpCommand());
         commands_.put(ClientCommand.REBOOT, new RebootCommand());
         commands_.put(ClientCommand.RESIZE, new ResizeCommand());
+        commands_.put(ClientCommand.IMAGESLIST, new ImagesListCommand());
         
         for (ClientCommand command : ClientCommand.values()) 
         {
@@ -247,6 +249,10 @@ public final class JCommanderCLI
             case DUMP :
                 output.setDump(true);
                 break;
+            
+            case IMAGESLIST : 
+                output.setImagesList(true);
+                break;
                 
             default :
                 log_.error(String.format("Unknown command specified: %s", command));
@@ -266,7 +272,7 @@ public final class JCommanderCLI
     {
         output.setClusterName(resizeCommand.getVirtualClusterName());
         output.setVirtualMachineName(resizeCommand.getVirtualMachineName());
-        output.setVcpu(resizeCommand.getVcpu());
+        output.setVcpus(resizeCommand.getVcpu());
         output.setMemory(resizeCommand.getMemory());
         output.setNetworkCapacity(new NetworkDemand(resizeCommand.getNetworkRxCapacity(), 
                 resizeCommand.getNetworkTxCapacity()));
@@ -321,10 +327,20 @@ public final class JCommanderCLI
     private ParserOutput addCommand(AddCommand addCommand)
     {
         ParserOutput output = new ParserOutput();
+        // template based
         output.setClusterName(addCommand.getVirtualClusterName());
         output.setVirtualMachineTemplate(addCommand.getVirtualMachineTemplate());
+
+        // flavor based
+        output.setVirtualMachineImage(addCommand.getImage());
+        output.setVcpus(addCommand.getVcpus());
+        output.setMemory(addCommand.getMemory());
+        output.setVirtualMachineName(addCommand.getName());
+        
+        // common
         output.getNetworkCapacity().setRxBytes(addCommand.getNetworkRxCapacity());
         output.getNetworkCapacity().setTxBytes(addCommand.getNetworkTxCapaciy());
+        
         return output;
     }
     
@@ -338,6 +354,17 @@ public final class JCommanderCLI
     {
         output.setClusterName(clusterCommand.getVirtualClusterName());
         output.setVirtualMachineName(clusterCommand.getVirtualMachineName());
+    }
+    
+    
+    /**
+     * Returns the add command.
+     * 
+     * @return   The add command
+     */
+    public ImagesListCommand getImagesList()
+    {
+        return (ImagesListCommand) commands_.get(ClientCommand.IMAGESLIST);
     }
     
     /**

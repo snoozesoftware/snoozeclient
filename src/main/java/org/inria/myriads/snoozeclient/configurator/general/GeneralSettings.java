@@ -33,6 +33,9 @@ public class GeneralSettings
     /** Bootstrap addresses. */
     private List<NetworkAddress> bootstrapNodes_;
     
+    /** Images repository address.*/
+    private NetworkAddress imagesRepository_;
+    
     /** Submission polling interval. */
     private int submissionPollingInterval_;
 
@@ -146,5 +149,21 @@ public class GeneralSettings
     public void setGraphPollingInterval(int graphPollingInterval) 
     {
         graphPollingInterval_ = graphPollingInterval;
+    }
+
+    /**
+     * @return the imagesRepository
+     */
+    public NetworkAddress getImagesRepository() 
+    {
+        return imagesRepository_;
+    }
+
+    /**
+     * @param imagesRepository the imagesRepository to set
+     */
+    public void setImagesRepository(NetworkAddress imagesRepository) 
+    {
+        imagesRepository_ = imagesRepository;
     }
 }
