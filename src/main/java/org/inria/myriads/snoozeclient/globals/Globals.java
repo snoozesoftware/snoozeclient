@@ -26,11 +26,7 @@ package org.inria.myriads.snoozeclient.globals;
  */
 public final class Globals 
 {
-    /** Log4j config file. */
-    public static final String LOG4J_CONFIG = "/usr/share/snoozeclient/configs/log4j.xml";
-    
-    /** Client config. */
-    public static final String CLIENT_CONFIG = "/usr/share/snoozeclient/configs/snooze_client.cfg";
+
     
     /** Repository path. */
     public static final String REPOSITORY_STORAGE_DIRECTORY = System.getProperty("user.home") + "/.snoozeclient/";
