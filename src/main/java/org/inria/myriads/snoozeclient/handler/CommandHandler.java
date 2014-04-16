@@ -30,6 +30,7 @@ import java.util.Map;
 
 import javax.swing.SwingUtilities;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozeclient.configurator.api.ClientConfiguration;
 import org.inria.myriads.snoozeclient.configurator.general.GeneralSettings;
 import org.inria.myriads.snoozeclient.database.api.AttributeType;
@@ -47,6 +48,7 @@ import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
@@ -537,11 +539,15 @@ public final class CommandHandler
         startVirtualClusterSubmission(VirtualClusterSubmissionRequest submissionRequest) 
         throws CommandHandlerException, BootstrapUtilityException
     {
-        GroupManagerDescription groupLeader = getGroupLeaderDescription();  
-        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();   
+        List<NetworkAddress> bootstrapAddress = clientConfiguration_.getGeneralSettings().getBootstrapNodes();    
+        BootstrapAPI bootstrapCommunicator = BootstrapUtilis.getActiveBootstrapCommunicator(bootstrapAddress);
+        if (bootstrapCommunicator == null)
+        {
+            throw new BootstrapUtilityException("Unable to find any active bootstrap node!");
+        }
+        
         VirtualClusterControl virtualClusterControl = new VirtualClusterControl(clientConfiguration_);
-        VirtualClusterSubmissionResponse response = virtualClusterControl.start(submissionRequest, 
-                                                                                groupLeaderAddress); 
+        VirtualClusterSubmissionResponse response = virtualClusterControl.start(submissionRequest); 
         return response;
     }
     
@@ -697,7 +703,7 @@ public final class CommandHandler
         
         ConsoleOutput output = generateInformationOutput(virtualMachine);      
         String virtualMachineAddress = virtualMachine.getIpAddress();
-        String groupManagerAddress = virtualMachine.getGroupManagerControlDataAddress().getAddress();
+        String groupManagerAddress = virtualMachine.getVirtualMachineLocation().getGroupManagerControlDataAddress().getAddress();
         String localControllerAddress = virtualMachine.getVirtualMachineLocation().
                                             getLocalControllerControlDataAddress().getAddress();
         log_.info(String.format(header,
@@ -900,13 +906,16 @@ public final class CommandHandler
             return;
         }
               
+        
         VirtualMachineLocation location = metaData.getVirtualMachineLocation();
+        
         log_.debug(String.format("Command: %s for virtual machine: %s on local controller %s", 
-                                  command, virtualMachineId, location.getLocalControllerId()));
-
+                command, virtualMachineId, location.getLocalControllerId()));
         NetworkAddress groupManagerAddress = metaData.getGroupManagerControlDataAddress();
+
         VirtualClusterControl virtualClusterControl = createVirtualClusterControl(location, groupManagerAddress);
-        executeVirtualMachineCommand(virtualClusterControl, command, location);   
+        executeVirtualMachineCommand(virtualClusterControl, command, location);
+        
     }
     
     /**
@@ -931,6 +940,9 @@ public final class CommandHandler
                 if (control == null)
                 {
                     virtualMachine = new VirtualMachineMetaData();
+                    ObjectMapper mapper = new ObjectMapper();
+                    String dump = mapper.writeValueAsString(virtualMachine);
+                    log_.debug(dump);
                     virtualMachine.setVirtualMachineLocation(location);
                     virtualMachine.setStatus(VirtualMachineStatus.OFFLINE);
                 } else
@@ -938,6 +950,7 @@ public final class CommandHandler
                     MetaDataRequest request = createMetaDataRequest(location);
                     virtualMachine = control.info(request);   
                 }
+                
                 displayVirtualMachineInformation(virtualMachine);
                 break;
                 

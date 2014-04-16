@@ -109,7 +109,6 @@ public final class Main
     {          
         String configurationFile = null;
         String logFile = null;
-        System.out.println("Got arguments " + args.length);
         
         if (args.length >= NUMBER_OF_CMD_ARGUMENTS) 
         {

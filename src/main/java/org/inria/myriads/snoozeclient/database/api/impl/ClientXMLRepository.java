@@ -585,28 +585,72 @@ public final class ClientXMLRepository
     {
         Guard.check(virtualMachine);
         String virtualMachineTemplate = getVirtualMachineTemplateFromNode(virtualMachine);
-        if (virtualMachineTemplate == null)
+        String imageId = getValueFromNode(virtualMachine, "imageId");
+        
+        if (virtualMachineTemplate == null && imageId == null)
         {
-            log_.debug("No template could be found for this virtual machine!");
+            log_.debug("No template nor image id could be found for this virtual machine!");
             return null;
         }
         
-        TemplateReader templateReader = TemplateReaderFactory.newTemplateReader();
-        String templateContent = templateReader.readTemplateDescription(virtualMachineTemplate);
-        log_.debug(String.format("Virtual machine template: %s, content: %s",
-                                 virtualMachineTemplate, templateContent));
-   
-        NetworkDemand networkCapacity = getNetworkCapacityRequirementsFromNode(virtualMachine);  
+        VirtualMachineTemplate template = new VirtualMachineTemplate();
+        if (virtualMachineTemplate != null)
+        {
+            TemplateReader templateReader = TemplateReaderFactory.newTemplateReader();
+            String templateContent = templateReader.readTemplateDescription(virtualMachineTemplate);
+            log_.debug(String.format("Virtual machine template: %s, content: %s",
+                                     virtualMachineTemplate, templateContent));
+            template.setLibVirtTemplate(templateContent); 
+        }
+        else
+        {
+            String vcpus = getValueFromNode(virtualMachine, "vcpus");
+            if (vcpus == null)
+            {
+                return null;
+            }
+            String memory = getValueFromNode(virtualMachine, "memory");
+            if (memory == null)
+            {
+                return null;
+            }
+            String name = getValueFromNode(virtualMachine, "name");
+            if (name == null)
+            {
+                return null;
+            }
+            template.setVcpus(Integer.valueOf(vcpus));
+            template.setMemory(Long.valueOf(memory));
+            template.setName(name);
+            template.setImageId(imageId);
+        }
+        
+        NetworkDemand networkCapacity = getNetworkCapacityRequirementsFromNode(virtualMachine);
         if (networkCapacity == null)
         {
             log_.debug("Network capacity is NULL!");
             return null;
         }
-        
-        VirtualMachineTemplate template = new VirtualMachineTemplate();
-        template.setLibVirtTemplate(templateContent); 
+
         template.setNetworkCapacityDemand(networkCapacity);
+        
         return template;
+    }
+    
+    private String getValueFromNode(Node node, String tagName)
+    {
+        if (node.getNodeType() == Node.ELEMENT_NODE) 
+        {
+            Element vmElement = (Element) node;
+            log_.debug("Returning text content");
+            NodeList list = vmElement.getElementsByTagName(tagName);
+            if (list == null || list.getLength() < 1)
+            {
+                return null;
+            }
+            return vmElement.getElementsByTagName(tagName).item(0).getTextContent();
+        }
+        return null;   
     }
     
     /**
@@ -891,6 +935,7 @@ public final class ClientXMLRepository
         metaData.setGroupManagerControlDataAddress(controlDataAddress);
         metaData.getVirtualMachineLocation().setVirtualMachineId(virtualMachineId);
         metaData.getVirtualMachineLocation().setLocalControllerId(localControllerId);
+        
         return metaData;
     }
 
@@ -967,20 +1012,22 @@ public final class ClientXMLRepository
         throws ParseException 
     {        
         Guard.check(virtualMachine);
+        
         log_.debug("Getting group manager control data address from node");
+        NetworkAddress address = new NetworkAddress();
         
         Node groupManagerNode = getNodeByName("group_manager", virtualMachine);
         if (groupManagerNode == null)
         {
             log_.debug("No group manager information available!");
-            return null;
+            return address;
         }
         
         NodeList childNodes = groupManagerNode.getChildNodes();  
         if (childNodes == null)
         {
             log_.debug("The child list is NULL!");
-            return null;
+            return address;
         }
         
         String groupManagerAddress = getContentFromNodeList("listen_address", childNodes);
@@ -990,10 +1037,10 @@ public final class ClientXMLRepository
             groupManagerControlDataPort == null)
         {
             log_.debug("Something is wrong with the XML file!");
-            return null;
+            return address;
         }
             
-        NetworkAddress address = 
+        address = 
             NetworkUtils.createNetworkAddress(groupManagerAddress, Integer.valueOf(groupManagerControlDataPort));
         return address;
     }
@@ -1191,6 +1238,7 @@ public final class ClientXMLRepository
             {
                 if (firstNode.getNodeName().equals(name)) 
                 {
+                    log_.debug(String.format("Found one child with name: %s", name));
                     return firstNode;
                 }
             }

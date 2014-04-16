@@ -19,9 +19,18 @@
  */
 package org.inria.myriads.snoozeclient.resourcecontrol;
 
+import java.io.IOException;
+
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozeclient.configurator.api.ClientConfiguration;
+import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
+import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
@@ -83,14 +92,17 @@ public final class VirtualClusterControl
      * @param networkAddress             The group manager address
      * @return                           The virtual cluster response
      */
-    public VirtualClusterSubmissionResponse start(VirtualClusterSubmissionRequest virtualClusterDescription,
-                                                  NetworkAddress networkAddress)
+    public VirtualClusterSubmissionResponse start(VirtualClusterSubmissionRequest virtualClusterDescription)
     {
-        Guard.check(virtualClusterDescription, networkAddress);
+        Guard.check(virtualClusterDescription);
         log_.debug("Starting virtual cluster");
-                      
-        GroupManagerAPI groupLeaderCommunicator = CommunicatorFactory.newGroupManagerCommunicator(networkAddress); 
-        String taskIdentifier = groupLeaderCommunicator.startVirtualCluster(virtualClusterDescription);
+        
+        BootstrapAPI bootstrapCommunicator  = 
+                BootstrapUtilis.getActiveBootstrapCommunicator(clientConfiguration_.getGeneralSettings().getBootstrapNodes());
+        GroupManagerDescription groupLeaderDescription = bootstrapCommunicator.getGroupLeaderDescription();
+        
+        GroupManagerAPI groupLeader = CommunicatorFactory.newGroupManagerCommunicator(groupLeaderDescription.getListenSettings().getControlDataAddress());
+        String taskIdentifier = groupLeader.startVirtualCluster(virtualClusterDescription);
         log_.debug(String.format("Virtual cluster received identifier: %s", taskIdentifier));
         
         if (taskIdentifier == null)
@@ -106,7 +118,7 @@ public final class VirtualClusterControl
             {              
                 log_.debug("Waiting for virtual cluster response retrieval");
                 Thread.sleep(TimeUtils.convertSecondsToMilliseconds(pollingInterval));
-                virtualClusterResponse = groupLeaderCommunicator.getVirtualClusterResponse(taskIdentifier);
+                virtualClusterResponse = groupLeader.getVirtualClusterResponse(taskIdentifier);
                 if (virtualClusterResponse != null)
                 {
                     log_.debug("Received valid virtual cluster response!");

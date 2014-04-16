@@ -78,7 +78,7 @@ public final class AddCommand extends HelpCommandBase
         networkRxCapacity_ = 12800;
         networkTxCapaciy_ = 12800;
         vcpus_ = 1;
-        memory_ = 512;
+        memory_ = 512*1024;
         name_ = UUID.randomUUID().toString();
     }
     
