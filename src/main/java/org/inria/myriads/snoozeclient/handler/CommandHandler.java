@@ -28,8 +28,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.SwingUtilities;
-
 import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozeclient.configurator.api.ClientConfiguration;
 import org.inria.myriads.snoozeclient.configurator.general.GeneralSettings;
@@ -43,7 +41,6 @@ import org.inria.myriads.snoozeclient.parser.output.ParserOutput;
 import org.inria.myriads.snoozeclient.resourcecontrol.VirtualClusterControl;
 import org.inria.myriads.snoozeclient.statistics.results.SubmissionResults;
 import org.inria.myriads.snoozeclient.statistics.util.SubmissionResultsUtils;
-import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
 import org.inria.myriads.snoozeclient.systemtree.util.DumpUtil;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
@@ -51,7 +48,6 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
-import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
@@ -181,10 +177,6 @@ public final class CommandHandler
                 
             case DESTROY :
                 processCollectiveCommand(command);
-                break;
-                
-            case VISUALIZE :
-                processVisualizeCommand(clientConfiguration_, graphGenerator);
                 break;
                 
             case DUMP :
@@ -345,30 +337,7 @@ public final class CommandHandler
         
     }
 
-    
-
-    /**
-     * Processes the visualize command.
-     * 
-     * @param clientConfiguration   The client configuration
-     * @param graphGenerator        The graph generator
-     * @throws Exception            The exception
-     */
-    private void processVisualizeCommand(final ClientConfiguration clientConfiguration,
-                                         final SystemGraphGenerator graphGenerator)
-        throws Exception
-    {
-        log_.debug(String.format("Proessing visualize command"));     
-        SwingUtilities.invokeLater(new Runnable() 
-        {
-            public void run() 
-            {
-                SystemTreeVisualizer visualizer = new SystemTreeVisualizer(clientConfiguration, graphGenerator);
-                visualizer.setVisible(true); 
-            }
-        });           
-    }
-    
+       
     /**
      * Processes the dump command.
      * 

@@ -22,9 +22,6 @@ package org.inria.myriads.snoozeclient.parser.api.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
 import org.inria.myriads.snoozeclient.parser.api.CommandLineParser;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.AddCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ClusterCommandBase;
@@ -44,12 +41,14 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.ShutdownCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.StartCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.SuspendCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.UndefineCommand;
-import org.inria.myriads.snoozeclient.parser.api.impl.commands.VisualizeCommand;
 import org.inria.myriads.snoozeclient.parser.commands.ClientCommand;
 import org.inria.myriads.snoozeclient.parser.output.ParserOutput;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 
 /**
  * Implementation of the JCommander based CLI.
@@ -97,7 +96,6 @@ public final class JCommanderCLI
         commands_.put(ClientCommand.RESUME, new ResumeCommand());
         commands_.put(ClientCommand.INFO, new InfoCommand());
         commands_.put(ClientCommand.LIST, new ListCommand());
-        commands_.put(ClientCommand.VISUALIZE, new VisualizeCommand());
         commands_.put(ClientCommand.DUMP, new DumpCommand());
         commands_.put(ClientCommand.REBOOT, new RebootCommand());
         commands_.put(ClientCommand.RESIZE, new ResizeCommand());
@@ -241,9 +239,6 @@ public final class JCommanderCLI
                 
             case RESIZE :
                 resizeCommand(getResizeCommand(), output);
-                break;
-            case VISUALIZE :
-                output.setVisualize(true);
                 break;
              
             case DUMP :

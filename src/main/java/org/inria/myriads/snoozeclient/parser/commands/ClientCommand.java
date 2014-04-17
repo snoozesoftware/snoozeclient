@@ -48,8 +48,6 @@ public enum ClientCommand
     INFO("info"),
     /** List. */
     LIST("list"),
-    /** Visualize. */
-    VISUALIZE("visualize"),
     /** Dump. */
     DUMP("dump"),
     /** Reboot. */

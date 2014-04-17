@@ -96,7 +96,7 @@ public final class SystemGraphGenerator
             String virtualMachineId = entry.getKey();
             String virtualMachineName = virtualMachineId;
             SnoozeVertex virtualMachineVertex = new SnoozeVertex(NodeType.VM, virtualMachineId, virtualMachineName);
-            log_.info(String.format("\t \t \t VM : %s", virtualMachineVertex.getHostName()));
+            log_.info(String.format("\t \t \t VM : %s", virtualMachineVertex.getHostId()));
             graph.addEdge(edgeFactory_.create(), localControllerVertex, virtualMachineVertex);
         }       
     }
@@ -126,7 +126,7 @@ public final class SystemGraphGenerator
             SnoozeVertex groupManagerVertex = new SnoozeVertex(NodeType.GM, 
                                                                 groupManager.getId(),
                                                                 groupManager.getHostname());
-            log_.info(String.format("\t GM : %s", groupManagerVertex.getHostName()));
+            log_.info(String.format("\t GM : %s", groupManagerVertex.getHostId()));
             graph.addEdge(edgeFactory_.create(), groupLeaderVertex, groupManagerVertex);
             
             if (groupManager.getLocalControllers() != null)
@@ -169,7 +169,7 @@ public final class SystemGraphGenerator
             SnoozeVertex localControllerVertex = new SnoozeVertex(nodeType,
                                                                   localController.getId(),
                                                                   localController.getHostname());
-            log_.info(String.format("\t \t LC : %s", localControllerVertex.getHostName()));
+            log_.info(String.format("\t \t LC : %s", localControllerVertex.getHostId()));
             graph.addEdge(edgeFactory_.create(), groupManagerVertex, localControllerVertex);        
             addVirtualMachineBranch(graph,
                                     localControllerVertex, 
