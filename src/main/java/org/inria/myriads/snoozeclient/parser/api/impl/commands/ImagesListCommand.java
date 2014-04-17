@@ -32,7 +32,7 @@ import org.inria.myriads.snoozeclient.parser.api.impl.validation.PositiveLongVal
  * 
  * @author Eugen Feller
  */
-@Parameters(separators = "=", commandDescription = "Add virtual machine to the cluster")
+@Parameters(separators = "=", commandDescription = "List the available images")
 public final class ImagesListCommand extends HelpCommandBase
 {        
 
