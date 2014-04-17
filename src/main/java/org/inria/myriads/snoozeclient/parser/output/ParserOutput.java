@@ -53,6 +53,9 @@ public final class ParserOutput
     /** memory requirement. */
     private long memory_;
     
+    /** hostId placement. */
+    private String hostId_;
+    
     /** Visualization. */
     private boolean isVisualize_;
     
@@ -259,5 +262,21 @@ public final class ParserOutput
     {
         imagesList_ = true;
         
+    }
+
+    /**
+     * @return the hostId
+     */
+    public String getHostId() 
+    {
+        return hostId_;
+    }
+
+    /**
+     * @param hostId the hostId to set
+     */
+    public void setHostId(String hostId) 
+    {
+        hostId_ = hostId;
     }
 }

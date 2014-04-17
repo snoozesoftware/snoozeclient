@@ -122,7 +122,6 @@ public final class SystemGraphGenerator
         List<GroupManagerDescription> groupManagers = hierarchy.getGroupManagerDescriptions();
         for (GroupManagerDescription groupManager : groupManagers) 
         {
-            //String groupManagerLabel = createNodeLabel(NodeType.GM, groupManager.getId());
             SnoozeVertex groupManagerVertex = new SnoozeVertex(NodeType.GM, 
                                                                 groupManager.getId(),
                                                                 groupManager.getHostname());
@@ -149,11 +148,7 @@ public final class SystemGraphGenerator
             HashMap<String, LocalControllerDescription> localControllers) 
     {
 
-        Guard.check(graph, groupManagerVertex, localControllers);
-        //log_.info(String.format("Adding %d local controller to %s", 
-        //                         localControllers.size(),
-        //                         groupManagerVertex));
-               
+        Guard.check(graph, groupManagerVertex, localControllers);               
         
                 
         for (Map.Entry<String, LocalControllerDescription> entry : localControllers.entrySet()) 
@@ -162,7 +157,6 @@ public final class SystemGraphGenerator
             NodeType nodeType = NodeType.LC;
             if (localController.getStatus().equals(LocalControllerStatus.PASSIVE))
             {
-                //log_.info("local controller in PASSIVE mode!");
                 nodeType = NodeType.LC_PASSIVE;
             }
 

@@ -204,7 +204,10 @@ public final class CommandHandler
                 clientConfiguration_.getGeneralSettings().getImagesRepository();
         ImagesRepositoryAPI imagesRepositoryAPI = CommunicatorFactory.newImagesRepositoryCommunicator(imagesRepositoryAddress);
         VirtualMachineImageList imagesList = imagesRepositoryAPI.getImagesList();
-        
+        if (imagesList == null)
+        {
+            return;
+        }
         displayImagesList(imagesList);
     }
 
@@ -427,6 +430,7 @@ public final class CommandHandler
         template.setMemory(parserOutput_.getMemory());
         template.setImageId(virtualMachineImage);
         template.setName(parserOutput_.getVirtualMachineName());
+        template.setHostId(parserOutput_.getHostId());
         
         isAdded = clientRepository_.addVirtualMachineTemplate(template, parserOutput_.getVirtualClusterName());        
         if (!isAdded)

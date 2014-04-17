@@ -72,6 +72,10 @@ public final class AddCommand extends HelpCommandBase
                validateWith = PositiveIntegerValidator.class)
     private int networkTxCapaciy_;
     
+    /** hostId. */
+    @Parameter(names = {"-hid", "--hostId" }, description = "Host Id")
+    private String hostId_;
+    
     /** Constructor. */
     public AddCommand()
     {
@@ -152,5 +156,13 @@ public final class AddCommand extends HelpCommandBase
     public String getImage()
     {
         return image_;
+    }
+
+    /**
+     * @return the hostId
+     */
+    public String getHostId() 
+    {
+        return hostId_;
     }
 }

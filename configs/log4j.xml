@@ -67,6 +67,12 @@
 		<level value="DEBUG"/>
 		<appender-ref ref="FA"/>
         <appender-ref ref="CA"/>
+  </logger>
+
+	<logger name="org.inria.myriads.snoozeimages">
+		<level value="DEBUG"/>
+		<appender-ref ref="FA"/>
+        <appender-ref ref="CA"/>
 	</logger>
 	
 	<logger name="org.inria.myriads.snoozeclient">

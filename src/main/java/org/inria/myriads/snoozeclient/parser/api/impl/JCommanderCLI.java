@@ -332,6 +332,9 @@ public final class JCommanderCLI
         output.setMemory(addCommand.getMemory());
         output.setVirtualMachineName(addCommand.getName());
         
+        // static placement
+        output.setHostId(addCommand.getHostId());
+        
         // common
         output.getNetworkCapacity().setRxBytes(addCommand.getNetworkRxCapacity());
         output.getNetworkCapacity().setTxBytes(addCommand.getNetworkTxCapaciy());

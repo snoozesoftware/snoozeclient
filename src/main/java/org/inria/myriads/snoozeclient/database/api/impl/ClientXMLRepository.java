@@ -429,6 +429,9 @@ public final class ClientXMLRepository
             
             Element memoryDemand =  createMemoryDemandElement(description.getMemory());
             virtualMachine.appendChild(memoryDemand);
+            
+            Element hostIdDemand =  createHostIdDemandElement(description.getHostId());
+            virtualMachine.appendChild(hostIdDemand);
         }
         
         // common
@@ -441,6 +444,11 @@ public final class ClientXMLRepository
         return true;
     }
     
+    private Element createHostIdDemandElement(String hostId) {
+        Element element = createElementWithContent("hostId", String.valueOf(hostId));
+        return element;
+    }
+
     private Element createNameElement(String name) 
     {
         Element element = createElementWithContent("name", String.valueOf(name));
@@ -604,6 +612,7 @@ public final class ClientXMLRepository
         }
         else
         {
+            // maybe we should rely on default values of Snooze.
             String vcpus = getValueFromNode(virtualMachine, "vcpus");
             if (vcpus == null)
             {
@@ -619,10 +628,16 @@ public final class ClientXMLRepository
             {
                 return null;
             }
+            String hostId = getValueFromNode(virtualMachine, "hostId");
+            if (hostId != null)
+            {
+                template.setHostId(hostId);
+            }
             template.setVcpus(Integer.valueOf(vcpus));
             template.setMemory(Long.valueOf(memory));
             template.setName(name);
             template.setImageId(imageId);
+            
         }
         
         NetworkDemand networkCapacity = getNetworkCapacityRequirementsFromNode(virtualMachine);
