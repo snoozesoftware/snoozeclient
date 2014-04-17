@@ -45,10 +45,13 @@ import org.inria.myriads.snoozeclient.statistics.results.SubmissionResults;
 import org.inria.myriads.snoozeclient.statistics.util.SubmissionResultsUtils;
 import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
+import org.inria.myriads.snoozeclient.systemtree.util.DumpUtil;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
+import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
@@ -379,8 +382,20 @@ public final class CommandHandler
                                     String dumpOutputFile)
         throws Exception
     {
-        GroupManagerDescription groupLeader = BootstrapUtilis.getGroupLeaderDescription(bootstrapNodes);
-      //  DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
+        BootstrapAPI bootstrapCommunicator_ = BootstrapUtilis.getActiveBootstrapCommunicator(bootstrapNodes);
+        if (bootstrapCommunicator_ == null)
+        {
+            log_.info("No bootstrap available");
+            return;
+        }
+        GroupLeaderRepositoryInformation hierarchy = bootstrapCommunicator_.getCompleteHierarchy();
+        
+        if (hierarchy == null)
+        {
+                        return; 
+        }
+        
+        DumpUtil.writeGraph(graphGenerator.generateGraph(hierarchy), dumpOutputFile);
     }
     
     /**
@@ -688,7 +703,7 @@ public final class CommandHandler
         Guard.check(virtualMachine);
         log_.debug("Printing virtual machine information");
          
-        String header = "%-25.25s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-10s";
+        String header = "%-35.35s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-10s";
         if (isFirst_)
         {
             log_.info(String.format(header, 
