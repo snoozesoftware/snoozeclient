@@ -222,7 +222,7 @@ public final class CommandHandler
         Guard.check(virtualMachineImageList);
         log_.debug("Printing images list");
          
-        String header = "%-25.25s \t  %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s";
+        String header = "%-35.35s \t  %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s";
         
         log_.info(String.format(header, 
                                 "Name", "Capacity", "Allocation", 

@@ -84,6 +84,7 @@ public final class AddCommand extends HelpCommandBase
         vcpus_ = 1;
         memory_ = 512*1024;
         name_ = UUID.randomUUID().toString();
+        hostId_ = ""; 
     }
     
     /**
