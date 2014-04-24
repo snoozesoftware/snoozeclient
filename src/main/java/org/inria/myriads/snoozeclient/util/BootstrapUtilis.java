@@ -104,7 +104,7 @@ public final class BootstrapUtilis
      * @param bootstrapAddresses    The bootstrap addresses
      * @return                      The bootstrap communicator
      */
-    private static BootstrapAPI getActiveBootstrapCommunicator(List<NetworkAddress> bootstrapAddresses) 
+    public static BootstrapAPI getActiveBootstrapCommunicator(List<NetworkAddress> bootstrapAddresses) 
     {
         Guard.check(bootstrapAddresses);   
         log_.debug("Starting the bootstrap communicator");

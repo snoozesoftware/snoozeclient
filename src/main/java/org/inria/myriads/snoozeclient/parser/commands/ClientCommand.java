@@ -48,8 +48,6 @@ public enum ClientCommand
     INFO("info"),
     /** List. */
     LIST("list"),
-    /** Visualize. */
-    VISUALIZE("visualize"),
     /** Dump. */
     DUMP("dump"),
     /** Reboot. */
@@ -57,7 +55,11 @@ public enum ClientCommand
     /** Resize. */
     RESIZE("resize"),
     /** HostsList. */
-    HOSTS("hosts");
+    HOSTS("hosts"),
+    /** Images List. */
+    IMAGESLIST("images"),
+    /** Migrate*/
+    MIGRATE("migrate");
     
     /** Command name. */
     private String commandName_;

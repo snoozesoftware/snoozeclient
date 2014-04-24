@@ -22,9 +22,6 @@ package org.inria.myriads.snoozeclient.parser.api.impl;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.ParameterException;
-
 import org.inria.myriads.snoozeclient.parser.api.CommandLineParser;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.AddCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ClusterCommandBase;
@@ -33,9 +30,11 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.DefineCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DestroyCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.DumpCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.HostsCommand;
+import org.inria.myriads.snoozeclient.parser.api.impl.commands.ImagesListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.InfoCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.MainCommand;
+import org.inria.myriads.snoozeclient.parser.api.impl.commands.MigrateCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.RebootCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.RemoveCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ResizeCommand;
@@ -44,12 +43,14 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.ShutdownCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.StartCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.SuspendCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.UndefineCommand;
-import org.inria.myriads.snoozeclient.parser.api.impl.commands.VisualizeCommand;
 import org.inria.myriads.snoozeclient.parser.commands.ClientCommand;
 import org.inria.myriads.snoozeclient.parser.output.ParserOutput;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 
 /**
  * Implementation of the JCommander based CLI.
@@ -97,11 +98,12 @@ public final class JCommanderCLI
         commands_.put(ClientCommand.RESUME, new ResumeCommand());
         commands_.put(ClientCommand.INFO, new InfoCommand());
         commands_.put(ClientCommand.LIST, new ListCommand());
-        commands_.put(ClientCommand.VISUALIZE, new VisualizeCommand());
         commands_.put(ClientCommand.DUMP, new DumpCommand());
         commands_.put(ClientCommand.REBOOT, new RebootCommand());
         commands_.put(ClientCommand.RESIZE, new ResizeCommand());
         commands_.put(ClientCommand.HOSTS, new HostsCommand());
+        commands_.put(ClientCommand.IMAGESLIST, new ImagesListCommand());
+        commands_.put(ClientCommand.MIGRATE, new MigrateCommand());
         
         for (ClientCommand command : ClientCommand.values()) 
         {
@@ -238,20 +240,29 @@ public final class JCommanderCLI
             case INFO :
                 clusterCommand(getInfoCommand(), output);
                 break;
-                
+
             case RESIZE :
                 resizeCommand(getResizeCommand(), output);
                 break;
-                
+
             case HOSTS :  
                 hostsCommand(getHostsCommand(), output);
                 break;
+
             case VISUALIZE :
                 output.setVisualize(true);
                 break;
-             
+
             case DUMP :
                 output.setDump(true);
+                break;
+
+            case IMAGESLIST : 
+                output.setImagesList(true);
+                break;
+
+            case MIGRATE :
+                migrateCommand(getMigrateCommand(), output);
                 break;
                 
             default :
@@ -261,6 +272,13 @@ public final class JCommanderCLI
         return output;
     }
     
+    private void migrateCommand(MigrateCommand migrateCommand,
+            ParserOutput output) 
+    {
+        output.setHostId(migrateCommand.getHostId());
+        output.setVirtualMachineName(migrateCommand.getVirtualMachineName());
+    }
+
     /**
      * 
      * Resize Command.
@@ -272,7 +290,7 @@ public final class JCommanderCLI
     {
         output.setClusterName(resizeCommand.getVirtualClusterName());
         output.setVirtualMachineName(resizeCommand.getVirtualMachineName());
-        output.setVcpu(resizeCommand.getVcpu());
+        output.setVcpus(resizeCommand.getVcpu());
         output.setMemory(resizeCommand.getMemory());
         output.setNetworkCapacity(new NetworkDemand(resizeCommand.getNetworkRxCapacity(), 
                 resizeCommand.getNetworkTxCapacity()));
@@ -339,11 +357,22 @@ public final class JCommanderCLI
     private ParserOutput addCommand(AddCommand addCommand)
     {
         ParserOutput output = new ParserOutput();
+        // template based
         output.setClusterName(addCommand.getVirtualClusterName());
         output.setVirtualMachineTemplate(addCommand.getVirtualMachineTemplate());
+
+        // flavor based
+        output.setVirtualMachineImage(addCommand.getImage());
+        output.setVcpus(addCommand.getVcpus());
+        output.setMemory(addCommand.getMemory());
+        output.setVirtualMachineName(addCommand.getName());
+        
+        // static placement
+        output.setHostId(addCommand.getHostId());
+        
+        // common
         output.getNetworkCapacity().setRxBytes(addCommand.getNetworkRxCapacity());
         output.getNetworkCapacity().setTxBytes(addCommand.getNetworkTxCapaciy());
-        output.setHostId(addCommand.getHostId());
         return output;
     }
     
@@ -359,6 +388,17 @@ public final class JCommanderCLI
         output.setVirtualMachineName(clusterCommand.getVirtualMachineName());
     }
     
+    
+    /**
+     * Returns the add command.
+     * 
+     * @return   The add command
+     */
+    public ImagesListCommand getImagesList()
+    {
+        return (ImagesListCommand) commands_.get(ClientCommand.IMAGESLIST);
+    }
+    
     /**
      * Returns the add command.
      * 
@@ -367,6 +407,11 @@ public final class JCommanderCLI
     public AddCommand getAddCommand()
     {
         return (AddCommand) commands_.get(ClientCommand.ADD);
+    }
+    
+    public MigrateCommand getMigrateCommand()
+    {
+        return (MigrateCommand) commands_.get(ClientCommand.MIGRATE);
     }
     
     /**

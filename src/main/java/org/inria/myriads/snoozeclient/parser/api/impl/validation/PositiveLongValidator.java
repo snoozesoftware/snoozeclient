@@ -17,16 +17,33 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozeclient.parser.api.impl.commands;
+package org.inria.myriads.snoozeclient.parser.api.impl.validation;
 
-import com.beust.jcommander.Parameters;
+import com.beust.jcommander.IParameterValidator;
+import com.beust.jcommander.ParameterException;
 
 /**
- * Visualization command.
+ * Positive integer validation.
  * 
  * @author Eugen Feller
  */
-@Parameters(separators = "=", commandDescription = "Visualize system hierarchy")
-public class VisualizeCommand extends HelpCommandBase 
+public class PositiveLongValidator 
+    implements IParameterValidator 
 {
+    /**
+     * Valides the input.
+     *
+     * @param name                  The name
+     * @param value                 The value
+     * @throws ParameterException   The parameter exception
+     */
+    public void validate(String name, String value) 
+        throws ParameterException 
+    {
+        long n = Long.parseLong(value);
+        if (n < 0) 
+        {
+            throw new ParameterException("Parameter " + name + " should be positive (found " + value + ")");
+        }
+    }
 }

@@ -24,10 +24,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import edu.uci.ics.jung.graph.Forest;
 import edu.uci.ics.jung.graph.Graph;
 import edu.uci.ics.jung.io.GraphMLWriter;
 import org.apache.commons.collections15.Transformer;
 import org.apache.commons.collections15.TransformerUtils;
+import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
 import org.inria.myriads.snoozecommon.guard.Guard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,21 +58,21 @@ public final class DumpUtil
      * @throws IOException  The exception
      */
     @SuppressWarnings("unchecked")
-    public static void writeGraph(Graph<String, Integer> graph, String fileName) 
+    public static void writeGraph(Forest<SnoozeVertex, Integer> graph, String fileName) 
         throws IOException
     {
         Guard.check(graph, fileName);
-        log_.debug("Writing grahp in GraphML format to disk");
+        log_.debug("Writing graph in GraphML format to disk");
                         
-        Transformer<String, String> vertexData = TransformerUtils.nopTransformer();
-        GraphMLWriter<String, Integer> graphWriter = new GraphMLWriter<String, Integer>();
+        Transformer<SnoozeVertex, String> vertexData = TransformerUtils.nopTransformer();
+        GraphMLWriter<SnoozeVertex, Integer> graphWriter = new GraphMLWriter<SnoozeVertex, Integer>();
         graphWriter.addVertexData("data", null, null, vertexData);
         
-        Transformer<String, String> vertexId = new Transformer<String, String>() 
+        Transformer<SnoozeVertex, String> vertexId = new Transformer<SnoozeVertex, String>() 
         { 
-            public String transform(String vertexLabel) 
+            public String transform(SnoozeVertex vertex) 
             { 
-                return String.valueOf(Math.abs(vertexLabel.hashCode()));
+                return String.valueOf(vertex.getNodeType());
             } 
         };     
         graphWriter.setVertexIDs(vertexId);

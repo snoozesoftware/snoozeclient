@@ -28,8 +28,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.SwingUtilities;
-
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozeclient.configurator.api.ClientConfiguration;
 import org.inria.myriads.snoozeclient.configurator.general.GeneralSettings;
 import org.inria.myriads.snoozeclient.database.api.AttributeType;
@@ -42,8 +43,8 @@ import org.inria.myriads.snoozeclient.parser.output.ParserOutput;
 import org.inria.myriads.snoozeclient.resourcecontrol.VirtualClusterControl;
 import org.inria.myriads.snoozeclient.statistics.results.SubmissionResults;
 import org.inria.myriads.snoozeclient.statistics.util.SubmissionResultsUtils;
-import org.inria.myriads.snoozeclient.systemtree.SystemTreeVisualizer;
 import org.inria.myriads.snoozeclient.systemtree.graph.SystemGraphGenerator;
+import org.inria.myriads.snoozeclient.systemtree.util.DumpUtil;
 import org.inria.myriads.snoozeclient.util.BootstrapUtilis;
 import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
@@ -51,8 +52,11 @@ import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControl
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
 import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
+import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
+import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
@@ -68,6 +72,10 @@ import org.inria.myriads.snoozecommon.guard.Guard;
 import org.inria.myriads.snoozecommon.parser.VirtualClusterParserFactory;
 import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
+import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
+import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImageList;
+import org.inria.myriads.snoozeimages.communication.rest.CommunicatorFactory;
+import org.inria.myriads.snoozeimages.communication.rest.api.ImagesRepositoryAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -178,10 +186,6 @@ public final class CommandHandler
                 processCollectiveCommand(command);
                 break;
                 
-            case VISUALIZE :
-                processVisualizeCommand(clientConfiguration_, graphGenerator);
-                break;
-                
             case DUMP :
                 processDumpCommand(bootstrapNodes, graphGenerator, generalSettings.getDumpOutputFile());
                 break;
@@ -189,15 +193,111 @@ public final class CommandHandler
             case RESIZE:
                 processResizeCommand(command);
                 break;
+
             case HOSTS:
                 processHosts();
                 break;
+             
+            case IMAGESLIST:
+                processImagesListCommand(command);
+                break;
+                
+            case MIGRATE:
+                processMigrateCommand(command);
+                break;
+                
             default:
                 throw new CommandHandlerException(String.format("Unknown cluster command specified: %s", command));
         }
     }
     
 
+   
+
+    private void processMigrateCommand(ClientCommand command) 
+    {
+        
+        BootstrapAPI bootstrapCommunicator_ = 
+                BootstrapUtilis.getActiveBootstrapCommunicator(clientConfiguration_.getGeneralSettings().getBootstrapNodes());
+        if (bootstrapCommunicator_ == null)
+        {
+            log_.info("No bootstrap available");
+            return;
+        }
+        ClientMigrationRequestSimple migrationRequest = new ClientMigrationRequestSimple();
+        migrationRequest.setVirtualMachineId(parserOutput_.getVirtualMachineName());
+        migrationRequest.setLocalControllerId(parserOutput_.getHostId());
+        ObjectMapper mapper = new ObjectMapper();
+        String dump;
+        try {
+            dump = mapper.writeValueAsString(migrationRequest);
+            log_.debug(dump);
+        } catch (JsonGenerationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (JsonMappingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        boolean isMigrating = bootstrapCommunicator_.migrateVirtualMachine(migrationRequest);
+        if (isMigrating)
+        {
+            log_.info("Migration started");
+        }
+    }
+
+    private void processImagesListCommand(ClientCommand command) 
+    {
+        log_.debug("processing images list command");
+        NetworkAddress imagesRepositoryAddress = 
+                clientConfiguration_.getGeneralSettings().getImagesRepository();
+        ImagesRepositoryAPI imagesRepositoryAPI = CommunicatorFactory.newImagesRepositoryCommunicator(imagesRepositoryAddress);
+        VirtualMachineImageList imagesList = imagesRepositoryAPI.getImagesList();
+        if (imagesList == null)
+        {
+            return;
+        }
+        displayImagesList(imagesList);
+    }
+
+    
+    /**
+     * Print the virtual machine information.
+     * 
+     * @param virtualMachine  The virtual machine meta data
+     */
+    private void displayImagesList(VirtualMachineImageList virtualMachineImageList)
+    {
+        Guard.check(virtualMachineImageList);
+        log_.debug("Printing images list");
+         
+        String header = "%-35.35s \t  %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s";
+        
+        log_.info(String.format(header, 
+                                "Name", "Capacity", "Allocation", 
+                                "Format", "BackingStore"));    
+        String divider = "------------------------------------------------------------------------------------" +
+                         "------------------------------------------------------------------------------------" +
+                         "------------------";
+        log_.info(divider);
+        
+        for (VirtualMachineImage image : virtualMachineImageList.getImages())
+        {
+            log_.info(String.format(header,
+                    image.getName(),
+                    image.getCapacity(),
+                    image.getAllocation(),
+                    image.getFormat(),
+                    image.getBackingStore()
+                    ));
+        }
+        
+    }
+    
     /**
      * 
      * Process the hosts list request.
@@ -232,7 +332,7 @@ public final class CommandHandler
         log_.debug(String.format("Processing collective command: %s", command));
 
         String virtualMachineName = parserOutput_.getVirtualMachineName();
-        double vcpu = parserOutput_.getVcpu();
+        double vcpu = parserOutput_.getVcpus();
         double memory = parserOutput_.getMemory();
         double tx = parserOutput_.getNetworkCapacity().getTxBytes();
         double rx = parserOutput_.getNetworkCapacity().getRxBytes();
@@ -342,30 +442,7 @@ public final class CommandHandler
         
     }
 
-    
-
-    /**
-     * Processes the visualize command.
-     * 
-     * @param clientConfiguration   The client configuration
-     * @param graphGenerator        The graph generator
-     * @throws Exception            The exception
-     */
-    private void processVisualizeCommand(final ClientConfiguration clientConfiguration,
-                                         final SystemGraphGenerator graphGenerator)
-        throws Exception
-    {
-        log_.debug(String.format("Proessing visualize command"));     
-        SwingUtilities.invokeLater(new Runnable() 
-        {
-            public void run() 
-            {
-                SystemTreeVisualizer visualizer = new SystemTreeVisualizer(clientConfiguration, graphGenerator);
-                visualizer.setVisible(true); 
-            }
-        });           
-    }
-    
+       
     /**
      * Processes the dump command.
      * 
@@ -379,8 +456,20 @@ public final class CommandHandler
                                     String dumpOutputFile)
         throws Exception
     {
-        GroupManagerDescription groupLeader = BootstrapUtilis.getGroupLeaderDescription(bootstrapNodes);
-        //DumpUtil.writeGraph(graphGenerator.generateGraph(groupLeader), dumpOutputFile);
+        BootstrapAPI bootstrapCommunicator_ = BootstrapUtilis.getActiveBootstrapCommunicator(bootstrapNodes);
+        if (bootstrapCommunicator_ == null)
+        {
+            log_.info("No bootstrap available");
+            return;
+        }
+        GroupLeaderRepositoryInformation hierarchy = bootstrapCommunicator_.getCompleteHierarchy();
+        
+        if (hierarchy == null)
+        {
+                        return; 
+        }
+        
+        DumpUtil.writeGraph(graphGenerator.generateGraph(hierarchy), dumpOutputFile);
     }
     
     /**
@@ -428,15 +517,23 @@ public final class CommandHandler
         
         boolean isAdded = false;
         String virtualMachineTemplate = parserOutput_.getVirtualMachineTemplate();
-        if (virtualMachineTemplate == null)
+        String virtualMachineImage = parserOutput_.getVirtualMachineImage();
+        if (virtualMachineTemplate == null && virtualMachineImage == null)
         {
-            throw new CommandHandlerException("Add command failed! You must specify a virtual machine template!");
+            throw new CommandHandlerException("" +
+            		"Add command failed! " +
+            		"You must specify either a virtual machine template or an image name");
         }
 
         VirtualMachineTemplate template = new VirtualMachineTemplate();
         template.setLibVirtTemplate(virtualMachineTemplate);
         template.setNetworkCapacityDemand(parserOutput_.getNetworkCapacity());
+        template.setVcpus(parserOutput_.getVcpus());
+        template.setMemory(parserOutput_.getMemory());
+        template.setImageId(virtualMachineImage);
+        template.setName(parserOutput_.getVirtualMachineName());
         template.setHostId(parserOutput_.getHostId());
+        
         isAdded = clientRepository_.addVirtualMachineTemplate(template, parserOutput_.getVirtualClusterName());        
         if (!isAdded)
         {
@@ -532,11 +629,15 @@ public final class CommandHandler
         startVirtualClusterSubmission(VirtualClusterSubmissionRequest submissionRequest) 
         throws CommandHandlerException, BootstrapUtilityException
     {
-        GroupManagerDescription groupLeader = getGroupLeaderDescription();  
-        NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();   
+        List<NetworkAddress> bootstrapAddress = clientConfiguration_.getGeneralSettings().getBootstrapNodes();    
+        BootstrapAPI bootstrapCommunicator = BootstrapUtilis.getActiveBootstrapCommunicator(bootstrapAddress);
+        if (bootstrapCommunicator == null)
+        {
+            throw new BootstrapUtilityException("Unable to find any active bootstrap node!");
+        }
+        
         VirtualClusterControl virtualClusterControl = new VirtualClusterControl(clientConfiguration_);
-        VirtualClusterSubmissionResponse response = virtualClusterControl.start(submissionRequest, 
-                                                                                groupLeaderAddress); 
+        VirtualClusterSubmissionResponse response = virtualClusterControl.start(submissionRequest); 
         return response;
     }
     
@@ -677,7 +778,7 @@ public final class CommandHandler
         Guard.check(virtualMachine);
         log_.debug("Printing virtual machine information");
          
-        String header = "%-25.25s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-10s";
+        String header = "%-35.35s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-15.15s \t %-10s";
         if (isFirst_)
         {
             log_.info(String.format(header, 
@@ -692,7 +793,7 @@ public final class CommandHandler
         
         ConsoleOutput output = generateInformationOutput(virtualMachine);      
         String virtualMachineAddress = virtualMachine.getIpAddress();
-        String groupManagerAddress =virtualMachine.getVirtualMachineLocation().getGroupManagerControlDataAddress().getAddress();
+        String groupManagerAddress = virtualMachine.getVirtualMachineLocation().getGroupManagerControlDataAddress().getAddress();
         String localControllerAddress = virtualMachine.getVirtualMachineLocation().
                                             getLocalControllerControlDataAddress().getAddress();
         log_.info(String.format(header,
@@ -936,13 +1037,16 @@ public final class CommandHandler
             return;
         }
               
+        
         VirtualMachineLocation location = metaData.getVirtualMachineLocation();
+        
         log_.debug(String.format("Command: %s for virtual machine: %s on local controller %s", 
-                                  command, virtualMachineId, location.getLocalControllerId()));
-
+                command, virtualMachineId, location.getLocalControllerId()));
         NetworkAddress groupManagerAddress = metaData.getGroupManagerControlDataAddress();
+
         VirtualClusterControl virtualClusterControl = createVirtualClusterControl(location, groupManagerAddress);
-        executeVirtualMachineCommand(virtualClusterControl, command, location);   
+        executeVirtualMachineCommand(virtualClusterControl, command, location);
+        
     }
     
     /**
@@ -974,6 +1078,7 @@ public final class CommandHandler
                     MetaDataRequest request = createMetaDataRequest(location);
                     virtualMachine = control.info(request);   
                 }
+                
                 displayVirtualMachineInformation(virtualMachine);
                 break;
                 
@@ -1011,8 +1116,7 @@ public final class CommandHandler
                     isSuccessfull = control.destroy(location);
                 }
                 break;
-                
-                
+
             default:
                 throw new CommandHandlerException(String.format("Unknown command specified: %s", command));
         }        

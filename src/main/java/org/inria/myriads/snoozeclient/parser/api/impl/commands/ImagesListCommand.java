@@ -17,26 +17,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, see <http://www.gnu.org/licenses>.
  */
-package org.inria.myriads.snoozeclient.globals;
+package org.inria.myriads.snoozeclient.parser.api.impl.commands;
+
+import java.util.UUID;
+
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.Parameters;
+
+import org.inria.myriads.snoozeclient.parser.api.impl.validation.PositiveIntegerValidator;
+import org.inria.myriads.snoozeclient.parser.api.impl.validation.PositiveLongValidator;
 
 /**
- * Global settings.
+ * Images command.
  * 
  * @author Eugen Feller
  */
-public final class Globals 
-{
+@Parameters(separators = "=", commandDescription = "List the available images")
+public final class ImagesListCommand extends HelpCommandBase
+{        
 
-    
-    /** Repository path. */
-    public static final String REPOSITORY_STORAGE_DIRECTORY = System.getProperty("user.home") + "/.snoozeclient/";
-    
-    /** Name of the database. */
-    public static final String REPOSITORT_FILE_NAME = "snooze_client.xml";
-    
-    /** Hide constructor. */
-    private Globals()
-    {
-        throw new UnsupportedOperationException();
-    }
 }

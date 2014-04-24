@@ -26,6 +26,7 @@ import java.util.Map;
 import edu.uci.ics.jung.graph.DelegateForest;
 import edu.uci.ics.jung.graph.Forest;
 
+import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozeclient.systemtree.enums.NodeType;
 import org.inria.myriads.snoozeclient.systemtree.factory.EdgeFactory;
 import org.inria.myriads.snoozeclient.systemtree.vertex.SnoozeVertex;
@@ -88,14 +89,14 @@ public final class SystemGraphGenerator
                                          HashMap<String, VirtualMachineMetaData> virtualMachines)
     {
         Guard.check(graph, localControllerVertex, virtualMachines);
-        log_.info(String.format("Adding virtual machine branch to: %s", localControllerVertex.getHostId()));
+        //log_.info(String.format("Adding virtual machine branch to: %s", localControllerVertex.getHostId()));
         
         for (Map.Entry<String, VirtualMachineMetaData> entry : virtualMachines.entrySet()) 
         {
             String virtualMachineId = entry.getKey();
             String virtualMachineName = virtualMachineId;
             SnoozeVertex virtualMachineVertex = new SnoozeVertex(NodeType.VM, virtualMachineId, virtualMachineName);
-            log_.info(String.format("Adding virtual machine: %s", virtualMachineVertex.getHostId()));
+            log_.info(String.format("\t \t \t VM : %s", virtualMachineVertex.getHostId()));
             graph.addEdge(edgeFactory_.create(), localControllerVertex, virtualMachineVertex);
         }       
     }
@@ -115,17 +116,16 @@ public final class SystemGraphGenerator
         
         Forest<SnoozeVertex, Integer> graph = new DelegateForest<SnoozeVertex, Integer>();
         SnoozeVertex groupLeaderVertex = new SnoozeVertex(NodeType.GL, "0", "");
-        log_.info(String.format("Adding group leader node: %s", groupLeaderVertex.getHostId()));
+        log_.info(String.format("GL : %s", groupLeaderVertex.getHostId()));
         graph.addVertex(groupLeaderVertex);
-        
+
         List<GroupManagerDescription> groupManagers = hierarchy.getGroupManagerDescriptions();
         for (GroupManagerDescription groupManager : groupManagers) 
         {
-            //String groupManagerLabel = createNodeLabel(NodeType.GM, groupManager.getId());
             SnoozeVertex groupManagerVertex = new SnoozeVertex(NodeType.GM, 
                                                                 groupManager.getId(),
                                                                 groupManager.getHostname());
-            log_.info(String.format("Adding group manager: %s", groupManagerVertex.getHostId()));
+            log_.info(String.format("\t GM : %s", groupManagerVertex.getHostId()));
             graph.addEdge(edgeFactory_.create(), groupLeaderVertex, groupManagerVertex);
             
             if (groupManager.getLocalControllers() != null)
@@ -148,26 +148,22 @@ public final class SystemGraphGenerator
             HashMap<String, LocalControllerDescription> localControllers) 
     {
 
-        Guard.check(graph, groupManagerVertex, localControllers);
-        log_.info(String.format("Adding %d local controller to %s", 
-                                 localControllers.size(),
-                                 groupManagerVertex));
-               
+        Guard.check(graph, groupManagerVertex, localControllers);               
         
+                
         for (Map.Entry<String, LocalControllerDescription> entry : localControllers.entrySet()) 
         {
             LocalControllerDescription localController = entry.getValue();
             NodeType nodeType = NodeType.LC;
             if (localController.getStatus().equals(LocalControllerStatus.PASSIVE))
             {
-                log_.info("local controller in PASSIVE mode!");
                 nodeType = NodeType.LC_PASSIVE;
             }
 
             SnoozeVertex localControllerVertex = new SnoozeVertex(nodeType,
                                                                   localController.getId(),
                                                                   localController.getHostname());
-            log_.info(String.format("Adding local controller: %s", localControllerVertex));
+            log_.info(String.format("\t \t LC : %s", localControllerVertex.getHostId()));
             graph.addEdge(edgeFactory_.create(), groupManagerVertex, localControllerVertex);        
             addVirtualMachineBranch(graph,
                                     localControllerVertex, 

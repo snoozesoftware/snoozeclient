@@ -21,6 +21,7 @@ package org.inria.myriads.snoozeclient.main;
 
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Arrays;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -56,6 +57,8 @@ public final class Main
 {           
     /** Define the logger. */
     private static final Logger log_ = LoggerFactory.getLogger(Main.class);
+    
+    private static final int NUMBER_OF_CMD_ARGUMENTS = 2;
         
     /** Hide constructor. */
     private Main()
@@ -65,17 +68,18 @@ public final class Main
     
     /**
      * Returns the client configuration.
+     * @param configurationFile 
      * 
      * @return                               The client configuration
      * @throws IOException                   The I/O exception
      * @throws ClientConfiguratorException   The client configurator exception
      */
-    private static ClientConfiguration getClientConfiguration() 
+    private static ClientConfiguration getClientConfiguration(String configurationFile) 
         throws IOException, ClientConfiguratorException
     {
         log_.debug("Getting the client parameters");
         
-        ClientConfigurator clientConfigurator = ClientConfiguratorFactory.newClientConfigurator(Globals.CLIENT_CONFIG);
+        ClientConfigurator clientConfigurator = ClientConfiguratorFactory.newClientConfigurator(configurationFile);
         ClientConfiguration clientConfiguration = clientConfigurator.getConfiguration();
         OutputUtils.printConfiguration(clientConfiguration);
         return clientConfiguration;
@@ -103,14 +107,27 @@ public final class Main
      */
     public static void main(String[] args) 
     {          
-        LoggerUtils.configureLogger(Globals.LOG4J_CONFIG);
+        String configurationFile = null;
+        String logFile = null;
+        
+        if (args.length >= NUMBER_OF_CMD_ARGUMENTS) 
+        {
+            configurationFile = args[0];
+            logFile = args[1];
+        } else
+        {
+            System.out.println("Usage: java -jar snoozeclient.jar configurationFile logFile command [options]");
+            System.exit(1); 
+        }
+        
+        LoggerUtils.configureLogger(logFile);
         
         log_.debug("Starting Snooze client");   
         
         CommandLineParser parser = CommandLineParserFactory.newParser();
         try 
         {            
-            ParserOutput parserOutput = parser.parse(args);     
+            ParserOutput parserOutput = parser.parse(Arrays.copyOfRange(args, 2, args.length));     
             if (parserOutput == null)
             {
                 log_.debug("No parser output available!");
@@ -127,7 +144,7 @@ public final class Main
             }
             
             ClientRepository clientRepository = getClientRepository();
-            ClientConfiguration clientConfiguration = getClientConfiguration();
+            ClientConfiguration clientConfiguration = getClientConfiguration(configurationFile);
             CommandHandler commandHandler = new CommandHandler(clientConfiguration, clientRepository, parserOutput);
             commandHandler.dispatchCommand();
         }

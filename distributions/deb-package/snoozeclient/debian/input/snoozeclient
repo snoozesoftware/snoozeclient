@@ -19,4 +19,7 @@
 # along with this program; if not, see <http://www.gnu.org/licenses>.
 #
 
-java -jar /usr/share/snoozeclient/snoozeclient.jar "$@"
+log_file="/usr/share/snoozeclient/configs/log4j.xml"
+cfg_file="/usr/share/snoozeclient/configs/snooze_client.cfg"
+
+java -jar /usr/share/snoozeclient/snoozeclient.jar $cfg_file $log_file "$@"

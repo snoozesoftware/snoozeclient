@@ -398,8 +398,8 @@ public final class ClientXMLRepository
             log_.debug("Unable to find the cluster");
             return false;
         }
+        String virtualMachineId = getVirtualMachineId(description);
         
-        String virtualMachineId = getVirtualMachineIdFromTemplate(description.getLibVirtTemplate());
         boolean doesExist = hasAttribute(AttributeType.vm, virtualMachineId);
         if (doesExist)
         {
@@ -409,9 +409,33 @@ public final class ClientXMLRepository
         
         Element virtualMachine = createVirtualMachineNode(virtualMachineId);
         
-        Element libVirtTemplate = createLibVirtTemplateElement(description.getLibVirtTemplate());
-        virtualMachine.appendChild(libVirtTemplate);
+        // template based
+        if (description.getLibVirtTemplate() != null)
+        {
+            Element libVirtTemplate = createLibVirtTemplateElement(description.getLibVirtTemplate());
+            virtualMachine.appendChild(libVirtTemplate);
+        }
+            
+        // flavor based
+        if (description.getLibVirtDescription() == null)
+        {
+            Element name =  createNameElement(description.getName());
+            virtualMachine.appendChild(name);
+            
+            Element image =  createImageElement(description.getImageId());
+            virtualMachine.appendChild(image);
+            
+            Element vcpusDemand =  createVcpusDemandElement(description.getVcpus());
+            virtualMachine.appendChild(vcpusDemand);
+            
+            Element memoryDemand =  createMemoryDemandElement(description.getMemory());
+            virtualMachine.appendChild(memoryDemand);
+            
+            Element hostIdDemand =  createHostIdDemandElement(description.getHostId());
+            virtualMachine.appendChild(hostIdDemand);
+        }
         
+        // common
         Element networkDemand = createNetworkCapacityElement(description.getNetworkCapacityDemand());
         virtualMachine.appendChild(networkDemand);
         
@@ -424,9 +448,46 @@ public final class ClientXMLRepository
         return true;
     }
     
-    private Element createNetwortCapacityElement(String hostId) {
-        Element element = createElementWithContent("hostId", hostId);
+    private Element createHostIdDemandElement(String hostId) {
+        Element element = createElementWithContent("hostId", String.valueOf(hostId));
         return element;
+    }
+
+    private Element createNameElement(String name) 
+    {
+        Element element = createElementWithContent("name", String.valueOf(name));
+        return element;
+    }
+
+    private Element createMemoryDemandElement(long memory) 
+    {
+        Element element = createElementWithContent("memory", String.valueOf(memory));
+        return element;
+    }
+
+    private Element createVcpusDemandElement(int vcpus) 
+    {
+        Element element = createElementWithContent("vcpus", String.valueOf(vcpus));
+        return element;
+    }
+
+    private Element createImageElement(String imageId) 
+    {
+        Element element = createElementWithContent("imageId", imageId);
+        return element;
+    }
+
+    private String getVirtualMachineId(VirtualMachineTemplate description) throws Exception 
+    {
+        log_.debug("Getting the name from the command line");
+        if (description.getLibVirtTemplate() == null)
+        {
+            log_.debug("no template given, search name in the cli");
+            return description.getName();
+        }
+            
+        log_.debug("extract the name from the template");
+        return getVirtualMachineIdFromTemplate(description.getLibVirtTemplate());
     }
 
     /**
@@ -536,36 +597,81 @@ public final class ClientXMLRepository
     {
         Guard.check(virtualMachine);
         String virtualMachineTemplate = getVirtualMachineTemplateFromNode(virtualMachine);
-        if (virtualMachineTemplate == null)
+        String imageId = getValueFromNode(virtualMachine, "imageId");
+        
+        if (virtualMachineTemplate == null && imageId == null)
         {
-            log_.debug("No template could be found for this virtual machine!");
+            log_.debug("No template nor image id could be found for this virtual machine!");
             return null;
         }
         
-        TemplateReader templateReader = TemplateReaderFactory.newTemplateReader();
-        String templateContent = templateReader.readTemplateDescription(virtualMachineTemplate);
-        log_.debug(String.format("Virtual machine template: %s, content: %s",
-                                 virtualMachineTemplate, templateContent));
-   
-        NetworkDemand networkCapacity = getNetworkCapacityRequirementsFromNode(virtualMachine);  
+        VirtualMachineTemplate template = new VirtualMachineTemplate();
+        if (virtualMachineTemplate != null)
+        {
+            TemplateReader templateReader = TemplateReaderFactory.newTemplateReader();
+            String templateContent = templateReader.readTemplateDescription(virtualMachineTemplate);
+            log_.debug(String.format("Virtual machine template: %s, content: %s",
+                                     virtualMachineTemplate, templateContent));
+            template.setLibVirtTemplate(templateContent); 
+        }
+        else
+        {
+            // maybe we should rely on default values of Snooze.
+            String vcpus = getValueFromNode(virtualMachine, "vcpus");
+            if (vcpus == null)
+            {
+                return null;
+            }
+            String memory = getValueFromNode(virtualMachine, "memory");
+            if (memory == null)
+            {
+                return null;
+            }
+            String name = getValueFromNode(virtualMachine, "name");
+            if (name == null)
+            {
+                return null;
+            }
+            String hostId = getValueFromNode(virtualMachine, "hostId");
+            if (hostId != null)
+            {
+                template.setHostId(hostId);
+            }
+            template.setVcpus(Integer.valueOf(vcpus));
+            template.setMemory(Long.valueOf(memory));
+            template.setName(name);
+            template.setImageId(imageId);
+            
+        }
+        
+        NetworkDemand networkCapacity = getNetworkCapacityRequirementsFromNode(virtualMachine);
         if (networkCapacity == null)
         {
             log_.debug("Network capacity is NULL!");
             return null;
         }
-        String hostId = getHostIdFromNode(virtualMachine);
-        
-        VirtualMachineTemplate template = new VirtualMachineTemplate();
-        template.setLibVirtTemplate(templateContent); 
+
         template.setNetworkCapacityDemand(networkCapacity);
-        if (hostId!=null)
-        {
-            template.setHostId(hostId);
-        }
+        
         return template;
     }
-
-
+    
+    private String getValueFromNode(Node node, String tagName)
+    {
+        if (node.getNodeType() == Node.ELEMENT_NODE) 
+        {
+            Element vmElement = (Element) node;
+            log_.debug("Returning text content");
+            NodeList list = vmElement.getElementsByTagName(tagName);
+            if (list == null || list.getLength() < 1)
+            {
+                return null;
+            }
+            return vmElement.getElementsByTagName(tagName).item(0).getTextContent();
+        }
+        return null;   
+    }
+    
     /**
      * Creates virtual cluster templates.
      * 
@@ -848,6 +954,7 @@ public final class ClientXMLRepository
         metaData.setGroupManagerControlDataAddress(controlDataAddress);
         metaData.getVirtualMachineLocation().setVirtualMachineId(virtualMachineId);
         metaData.getVirtualMachineLocation().setLocalControllerId(localControllerId);
+        
         return metaData;
     }
 
@@ -951,20 +1058,22 @@ public final class ClientXMLRepository
         throws ParseException 
     {        
         Guard.check(virtualMachine);
+        
         log_.debug("Getting group manager control data address from node");
+        NetworkAddress address = new NetworkAddress();
         
         Node groupManagerNode = getNodeByName("group_manager", virtualMachine);
         if (groupManagerNode == null)
         {
             log_.debug("No group manager information available!");
-            return null;
+            return address;
         }
         
         NodeList childNodes = groupManagerNode.getChildNodes();  
         if (childNodes == null)
         {
             log_.debug("The child list is NULL!");
-            return null;
+            return address;
         }
         
         String groupManagerAddress = getContentFromNodeList("listen_address", childNodes);
@@ -974,10 +1083,10 @@ public final class ClientXMLRepository
             groupManagerControlDataPort == null)
         {
             log_.debug("Something is wrong with the XML file!");
-            return null;
+            return address;
         }
             
-        NetworkAddress address = 
+        address = 
             NetworkUtils.createNetworkAddress(groupManagerAddress, Integer.valueOf(groupManagerControlDataPort));
         return address;
     }
@@ -1175,6 +1284,7 @@ public final class ClientXMLRepository
             {
                 if (firstNode.getNodeName().equals(name)) 
                 {
+                    log_.debug(String.format("Found one child with name: %s", name));
                     return firstNode;
                 }
             }

@@ -38,6 +38,9 @@ public final class ParserOutput
     /** Virtual machine template. */
     private String virtualMachineTemplate_;
     
+    /** Virtual machine image.*/
+    private String virtualMachineImage_;
+    
     /** Virtual machine name. */
     private String virtualMachineName_;
     
@@ -45,16 +48,23 @@ public final class ParserOutput
     private NetworkDemand networkCapacity_;
 
     /** vcpu requirement. */
-    private double vcpu_;
+    private int vcpus_;
     
     /** memory requirement. */
-    private double memory_;
+    private long memory_;
+    
+    /** hostId placement. */
+    private String hostId_;
     
     /** Visualization. */
     private boolean isVisualize_;
     
     /** Dump. */
     private boolean isDump_;
+
+    /** Images List. */
+    private boolean imagesList_;
+    
     
     /** Host id.*/
     private String hostId_;
@@ -208,23 +218,23 @@ public final class ParserOutput
     /**
      * @return the vcpu
      */
-    public double getVcpu() 
+    public int getVcpus() 
     {
-        return vcpu_;
+        return vcpus_;
     }
 
     /**
      * @param vcpu the vcpu_ to set
      */
-    public void setVcpu(double vcpu)
+    public void setVcpus(int vcpus)
     {
-        this.vcpu_ = vcpu;
+        this.vcpus_ = vcpus;
     }
 
     /**
      * @return the memory
      */
-    public double getMemory() 
+    public long getMemory() 
     {
         return memory_;
     }
@@ -232,9 +242,29 @@ public final class ParserOutput
     /**
      * @param memory the memory to set
      */
-    public void setMemory(double memory)
+    public void setMemory(long memory)
     {
         this.memory_ = memory;
+    }
+
+    /**
+     * @return the virtualMachineImage
+     */
+    public String getVirtualMachineImage() {
+        return virtualMachineImage_;
+    }
+
+    /**
+     * @param virtualMachineImage the virtualMachineImage to set
+     */
+    public void setVirtualMachineImage(String virtualMachineImage) {
+        virtualMachineImage_ = virtualMachineImage;
+    }
+
+    public void setImagesList(boolean b) 
+    {
+        imagesList_ = true;
+        
     }
 
     /**
