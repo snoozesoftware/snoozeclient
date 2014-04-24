@@ -20,7 +20,7 @@
 #
 
 SNOOZE_PACKAGE_NAME="snoozeclient"
-SNOOZE_JAR_NAME="uber-snoozeclient-2.1.4.jar"
+SNOOZE_JAR_NAME="uber-snoozeclient-2.1.5-SNAPSHOT.jar"
 
 # Update input files
 cp ../../configs/snooze_client.cfg $SNOOZE_PACKAGE_NAME/debian/input/
