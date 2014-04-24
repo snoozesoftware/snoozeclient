@@ -33,6 +33,7 @@ import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionRequest;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.submission.VirtualClusterSubmissionResponse;
@@ -205,5 +206,13 @@ public final class VirtualClusterControl
     {
         Guard.check(location);
         return groupManagerCommunicator_.destroyVirtualMachine(location);
+    }
+
+    public boolean migrate(ClientMigrationRequestSimple migrationRequest) 
+    {
+        BootstrapAPI bootstrapCommunicator  = 
+                BootstrapUtilis.getActiveBootstrapCommunicator(clientConfiguration_.getGeneralSettings().getBootstrapNodes());
+        
+        return bootstrapCommunicator.migrateVirtualMachine(migrationRequest);
     }
 }

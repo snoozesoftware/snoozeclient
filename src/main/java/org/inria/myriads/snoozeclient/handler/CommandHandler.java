@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.inria.myriads.snoozeclient.configurator.api.ClientConfiguration;
 import org.inria.myriads.snoozeclient.configurator.general.GeneralSettings;
@@ -50,6 +52,7 @@ import org.inria.myriads.snoozecommon.communication.groupmanager.repository.Grou
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.discovery.VirtualMachineDiscoveryResponse;
+import org.inria.myriads.snoozecommon.communication.virtualcluster.migration.ClientMigrationRequestSimple;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.NetworkDemand;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.monitoring.VirtualMachineMonitoringData;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.requests.MetaDataRequest;
@@ -191,11 +194,53 @@ public final class CommandHandler
                 processImagesListCommand(command);
                 break;
                 
+            case MIGRATE:
+                processMigrateCommand(command);
+                break;
+                
             default:
                 throw new CommandHandlerException(String.format("Unknown cluster command specified: %s", command));
         }
     }
     
+
+   
+
+    private void processMigrateCommand(ClientCommand command) 
+    {
+        
+        BootstrapAPI bootstrapCommunicator_ = 
+                BootstrapUtilis.getActiveBootstrapCommunicator(clientConfiguration_.getGeneralSettings().getBootstrapNodes());
+        if (bootstrapCommunicator_ == null)
+        {
+            log_.info("No bootstrap available");
+            return;
+        }
+        ClientMigrationRequestSimple migrationRequest = new ClientMigrationRequestSimple();
+        migrationRequest.setVirtualMachineId(parserOutput_.getVirtualMachineName());
+        migrationRequest.setLocalControllerId(parserOutput_.getHostId());
+        ObjectMapper mapper = new ObjectMapper();
+        String dump;
+        try {
+            dump = mapper.writeValueAsString(migrationRequest);
+            log_.debug(dump);
+        } catch (JsonGenerationException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (JsonMappingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+        boolean isMigrating = bootstrapCommunicator_.migrateVirtualMachine(migrationRequest);
+        if (isMigrating)
+        {
+            log_.info("Migration started");
+        }
+    }
 
     private void processImagesListCommand(ClientCommand command) 
     {
@@ -928,9 +973,6 @@ public final class CommandHandler
                 if (control == null)
                 {
                     virtualMachine = new VirtualMachineMetaData();
-                    ObjectMapper mapper = new ObjectMapper();
-                    String dump = mapper.writeValueAsString(virtualMachine);
-                    log_.debug(dump);
                     virtualMachine.setVirtualMachineLocation(location);
                     virtualMachine.setStatus(VirtualMachineStatus.OFFLINE);
                 } else
@@ -976,8 +1018,7 @@ public final class CommandHandler
                     isSuccessfull = control.destroy(location);
                 }
                 break;
-                
-                
+
             default:
                 throw new CommandHandlerException(String.format("Unknown command specified: %s", command));
         }        

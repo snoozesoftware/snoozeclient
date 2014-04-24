@@ -33,6 +33,7 @@ import org.inria.myriads.snoozeclient.parser.api.impl.commands.ImagesListCommand
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.InfoCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ListCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.MainCommand;
+import org.inria.myriads.snoozeclient.parser.api.impl.commands.MigrateCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.RebootCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.RemoveCommand;
 import org.inria.myriads.snoozeclient.parser.api.impl.commands.ResizeCommand;
@@ -100,6 +101,7 @@ public final class JCommanderCLI
         commands_.put(ClientCommand.REBOOT, new RebootCommand());
         commands_.put(ClientCommand.RESIZE, new ResizeCommand());
         commands_.put(ClientCommand.IMAGESLIST, new ImagesListCommand());
+        commands_.put(ClientCommand.MIGRATE, new MigrateCommand());
         
         for (ClientCommand command : ClientCommand.values()) 
         {
@@ -249,6 +251,10 @@ public final class JCommanderCLI
                 output.setImagesList(true);
                 break;
                 
+            case MIGRATE :
+                migrateCommand(getMigrateCommand(), output);
+                break;
+                
             default :
                 log_.error(String.format("Unknown command specified: %s", command));
         }
@@ -256,6 +262,13 @@ public final class JCommanderCLI
         return output;
     }
     
+    private void migrateCommand(MigrateCommand migrateCommand,
+            ParserOutput output) 
+    {
+        output.setHostId(migrateCommand.getHostId());
+        output.setVirtualMachineName(migrateCommand.getVirtualMachineName());
+    }
+
     /**
      * 
      * Resize Command.
@@ -373,6 +386,11 @@ public final class JCommanderCLI
     public AddCommand getAddCommand()
     {
         return (AddCommand) commands_.get(ClientCommand.ADD);
+    }
+    
+    public MigrateCommand getMigrateCommand()
+    {
+        return (MigrateCommand) commands_.get(ClientCommand.MIGRATE);
     }
     
     /**

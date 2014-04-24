@@ -55,7 +55,9 @@ public enum ClientCommand
     /** Resize. */
     RESIZE("resize"), 
     /** Images List. */
-    IMAGESLIST("images");
+    IMAGESLIST("images"),
+    /** Migrate*/
+    MIGRATE("migrate");
     
     /** Command name. */
     private String commandName_;
