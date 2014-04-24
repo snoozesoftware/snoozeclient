@@ -439,9 +439,6 @@ public final class ClientXMLRepository
         Element networkDemand = createNetworkCapacityElement(description.getNetworkCapacityDemand());
         virtualMachine.appendChild(networkDemand);
         
-        Element hostId = createNetwortCapacityElement(description.getHostId());
-        virtualMachine.appendChild(hostId);
-        
         cluster.appendChild(virtualMachine);
         writeXmlFile();
         

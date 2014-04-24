@@ -208,7 +208,6 @@ public final class VirtualClusterControl
         Guard.check(location);
         return groupManagerCommunicator_.destroyVirtualMachine(location);
     }
-<<<<<<< HEAD
     
     public VirtualMachineMetaData resize(ResizeRequest resizeRequest)
     {

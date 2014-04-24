@@ -53,9 +53,6 @@ public final class ParserOutput
     /** memory requirement. */
     private long memory_;
     
-    /** hostId placement. */
-    private String hostId_;
-    
     /** Visualization. */
     private boolean isVisualize_;
     
@@ -64,7 +61,6 @@ public final class ParserOutput
 
     /** Images List. */
     private boolean imagesList_;
-    
     
     /** Host id.*/
     private String hostId_;

@@ -77,10 +77,7 @@ public final class AddCommand extends HelpCommandBase
     private int networkTxCapaciy_;
     
     /** hostId. */
-    @Parameter(names = {"-hid", "--hostId" }, description = "Host Id")
-    private String hostId_;
-    
-    @Parameter(names = {"-hid", "--hostId"}, description = "Hosts id on which the vm will attemt to start")
+    @Parameter(names = {"-hid", "--hostId"}, description = "Hosts id on which the vm will attempt to start")
     private String hostId_;
     
     /** Constructor. */
@@ -143,6 +140,7 @@ public final class AddCommand extends HelpCommandBase
         hostId_ = hostId;
     }
 
+    /*
      * @return the name
      */
     public String getName() 

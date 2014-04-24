@@ -50,8 +50,8 @@ import org.inria.myriads.snoozecommon.communication.NetworkAddress;
 import org.inria.myriads.snoozecommon.communication.groupmanager.GroupManagerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerDescription;
 import org.inria.myriads.snoozecommon.communication.localcontroller.LocalControllerList;
-import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.rest.api.GroupManagerAPI;
+import org.inria.myriads.snoozecommon.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozecommon.communication.groupmanager.repository.GroupLeaderRepositoryInformation;
 import org.inria.myriads.snoozecommon.communication.rest.api.BootstrapAPI;
 import org.inria.myriads.snoozecommon.communication.virtualcluster.VirtualMachineMetaData;
@@ -74,7 +74,6 @@ import org.inria.myriads.snoozecommon.parser.api.VirtualClusterParser;
 import org.inria.myriads.snoozecommon.util.MonitoringUtils;
 import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImage;
 import org.inria.myriads.snoozecommon.virtualmachineimage.VirtualMachineImageList;
-import org.inria.myriads.snoozeimages.communication.rest.CommunicatorFactory;
 import org.inria.myriads.snoozeimages.communication.rest.api.ImagesRepositoryAPI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,22 +226,6 @@ public final class CommandHandler
         ClientMigrationRequestSimple migrationRequest = new ClientMigrationRequestSimple();
         migrationRequest.setVirtualMachineId(parserOutput_.getVirtualMachineName());
         migrationRequest.setLocalControllerId(parserOutput_.getHostId());
-        ObjectMapper mapper = new ObjectMapper();
-        String dump;
-        try {
-            dump = mapper.writeValueAsString(migrationRequest);
-            log_.debug(dump);
-        } catch (JsonGenerationException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
         boolean isMigrating = bootstrapCommunicator_.migrateVirtualMachine(migrationRequest);
         if (isMigrating)
         {
@@ -255,7 +238,7 @@ public final class CommandHandler
         log_.debug("processing images list command");
         NetworkAddress imagesRepositoryAddress = 
                 clientConfiguration_.getGeneralSettings().getImagesRepository();
-        ImagesRepositoryAPI imagesRepositoryAPI = CommunicatorFactory.newImagesRepositoryCommunicator(imagesRepositoryAddress);
+        ImagesRepositoryAPI imagesRepositoryAPI = org.inria.myriads.snoozeimages.communication.rest.CommunicatorFactory.newImagesRepositoryCommunicator(imagesRepositoryAddress);
         VirtualMachineImageList imagesList = imagesRepositoryAPI.getImagesList();
         if (imagesList == null)
         {
@@ -307,7 +290,6 @@ public final class CommandHandler
      */
     private void processHosts() throws CommandHandlerException, BootstrapUtilityException 
     {
-        // TODO Auto-generated method stub
         GroupManagerDescription groupLeader = getGroupLeaderDescription(); 
         
         NetworkAddress groupLeaderAddress = groupLeader.getListenSettings().getControlDataAddress();

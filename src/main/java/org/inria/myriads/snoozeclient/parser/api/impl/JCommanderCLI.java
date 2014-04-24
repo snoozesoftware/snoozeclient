@@ -249,10 +249,6 @@ public final class JCommanderCLI
                 hostsCommand(getHostsCommand(), output);
                 break;
 
-            case VISUALIZE :
-                output.setVisualize(true);
-                break;
-
             case DUMP :
                 output.setDump(true);
                 break;
